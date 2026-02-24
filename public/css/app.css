@@ -1,0 +1,1160 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family:
+        -apple-system, BlinkMacSystemFont, "Segoe UI",
+        "Hiragino Sans", "Hiragino Kaku Gothic ProN", Meiryo,
+        sans-serif;
+    background-color: #f5f5f5;
+    color: #2c3e50;
+    max-width: 480px;
+    margin: 0 auto;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* ヘッダー */
+.header {
+    background-color: #fff;
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.header-icons {
+    display: flex;
+    gap: 16px;
+}
+
+.header-icons i {
+    font-size: 20px;
+    color: #7f8c8d;
+    cursor: pointer;
+}
+
+/* フィルタータブ */
+.filter-tabs {
+    background-color: #fff;
+    padding: 16px 20px;
+    display: flex;
+    gap: 12px;
+    overflow-x: auto;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.filter-tab {
+    padding: 8px 20px;
+    border-radius: 20px;
+    border: none;
+    background-color: #f5f5f5;
+    color: #7f8c8d;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.3s;
+}
+
+.filter-tab.active {
+    background-color: #2c3e50;
+    color: #fff;
+}
+
+/* タスクリスト */
+.task-list-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+}
+
+.task-group {
+    margin-bottom: 24px;
+}
+
+.task-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+}
+
+.task-group-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #e74c3c;
+}
+
+.task-group-count {
+    background-color: #e8f4ff;
+    color: #3498db;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.task-item {
+    background-color: #fff;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.task-item:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.task-item-top {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.task-checkbox {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #e0e0e0;
+    border-radius: 50%;
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.task-checkbox.priority-high {
+    border-color: #e74c3c;
+}
+
+.task-checkbox.priority-medium {
+    border-color: #f39c12;
+}
+
+.task-title {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 500;
+    color: #2c3e50;
+    line-height: 1.5;
+}
+
+.task-meta {
+    display: flex;
+    gap: 16px;
+    margin-left: 36px;
+    flex-wrap: wrap;
+}
+
+.task-meta-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #7f8c8d;
+}
+
+.task-meta-item i {
+    font-size: 12px;
+}
+
+.task-meta-item.priority-high {
+    color: #e74c3c;
+}
+
+.task-meta-item.priority-medium {
+    color: #f39c12;
+}
+
+/* 音声入力ボタン */
+.voice-input-btn {
+    position: fixed;
+    bottom: 100px;
+    right: 20px;
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    transition: all 0.3s;
+    z-index: 100;
+}
+
+.voice-input-btn:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 16px rgba(231, 76, 60, 0.5);
+}
+
+/* ボトムナビ */
+.bottom-nav {
+    background-color: #fff;
+    padding: 12px 0;
+    display: flex;
+    justify-content: space-around;
+    box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 8px 24px;
+    color: #95a5a6;
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.nav-item.active {
+    color: #e74c3c;
+}
+
+.nav-item i {
+    font-size: 20px;
+}
+
+.nav-item span {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+/* モーダル共通スタイル */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: flex-end;
+    justify-content: center;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.modal-content {
+    background-color: #fff;
+    width: 100%;
+    max-width: 480px;
+    border-radius: 24px 24px 0 0;
+    padding: 24px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+    to {
+        transform: translateY(0);
+    }
+}
+
+/* 入力モーダル */
+.input-modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.input-modal-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #7f8c8d;
+    cursor: pointer;
+}
+
+.input-area {
+    margin-bottom: 24px;
+}
+
+.input-area textarea {
+    width: 100%;
+    min-height: 120px;
+    padding: 16px;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 16px;
+    font-family: inherit;
+    resize: vertical;
+}
+
+.input-area textarea:focus {
+    outline: none;
+    border-color: #e74c3c;
+}
+
+.submit-btn {
+    width: 100%;
+    padding: 16px;
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.submit-btn:hover {
+    background-color: #c0392b;
+}
+
+.submit-btn:disabled {
+    background-color: #bdc3c7;
+    cursor: not-allowed;
+}
+
+/* タスク詳細モーダル */
+.task-detail-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.task-detail-header .close-btn {
+    font-size: 24px;
+}
+
+.delete-btn {
+    background: none;
+    border: none;
+    color: #e74c3c;
+    font-size: 20px;
+    cursor: pointer;
+}
+
+.task-detail-content {
+    margin-bottom: 24px;
+}
+
+.task-detail-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.task-detail-title input {
+    flex: 1;
+    font-size: 18px;
+    font-weight: 600;
+    border: none;
+    background: transparent;
+    color: #2c3e50;
+}
+
+.task-detail-title input:focus {
+    outline: none;
+}
+
+.detail-field {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.detail-field:hover {
+    background-color: #ecf0f1;
+}
+
+.detail-field-label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #7f8c8d;
+    margin-bottom: 8px;
+}
+
+.detail-field-label i {
+    color: #e74c3c;
+    font-size: 14px;
+}
+
+.detail-field-value {
+    font-size: 16px;
+    font-weight: 500;
+    color: #2c3e50;
+}
+
+.priority-buttons {
+    display: flex;
+    gap: 12px;
+    margin-top: 8px;
+}
+
+.priority-btn {
+    flex: 1;
+    padding: 10px;
+    border: 2px solid #e0e0e0;
+    border-radius: 8px;
+    background-color: #fff;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.priority-btn.active.high {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    color: #fff;
+}
+
+.priority-btn.active.medium {
+    background-color: #f39c12;
+    border-color: #f39c12;
+    color: #fff;
+}
+
+.priority-btn.active.low {
+    background-color: #95a5a6;
+    border-color: #95a5a6;
+    color: #fff;
+}
+
+.task-detail-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.complete-btn {
+    flex: 1;
+    padding: 16px;
+    background-color: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.complete-btn:hover {
+    background-color: #f8f9fa;
+}
+
+.save-btn {
+    flex: 2;
+    padding: 16px;
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.3s;
+}
+
+.save-btn:hover {
+    background-color: #c0392b;
+}
+
+/* メンバー選択モーダル */
+.member-select-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.member-select-header h2 {
+    font-size: 20px;
+    font-weight: 600;
+}
+
+.search-box {
+    position: relative;
+    margin-bottom: 20px;
+}
+
+.search-box input {
+    width: 100%;
+    padding: 12px 16px 12px 40px;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 14px;
+    background-color: #f8f9fa;
+}
+
+.search-box input:focus {
+    outline: none;
+    border-color: #e74c3c;
+}
+
+.search-box i {
+    position: absolute;
+    left: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #95a5a6;
+}
+
+.member-list {
+    margin-bottom: 20px;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+.member-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 12px;
+    cursor: pointer;
+    border-radius: 8px;
+    transition: all 0.2s;
+}
+
+.member-item:hover {
+    background-color: #f8f9fa;
+}
+
+.member-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: #3498db;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.member-name {
+    flex: 1;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.member-check {
+    width: 24px;
+    height: 24px;
+    border: 2px solid #e0e0e0;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.member-check.selected {
+    background-color: #e74c3c;
+    border-color: #e74c3c;
+    color: #fff;
+}
+
+.member-select-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.clear-btn {
+    flex: 1;
+    padding: 16px;
+    background-color: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.apply-btn {
+    flex: 2;
+    padding: 16px;
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* ローディング */
+.loading {
+    text-align: center;
+    padding: 20px;
+    color: #7f8c8d;
+}
+
+/* 空状態 */
+.empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: #95a5a6;
+}
+
+.empty-state i {
+    font-size: 64px;
+    margin-bottom: 16px;
+    opacity: 0.3;
+}
+
+.empty-state p {
+    font-size: 16px;
+}
+
+/* グループ表示 */
+.task-group {
+    margin-bottom: 24px;
+}
+
+.task-group-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+    padding: 0 4px;
+}
+
+.task-group-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.task-group-count {
+    background-color: #e8f4ff;
+    color: #3498db;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 12px;
+    font-weight: 600;
+    min-width: 20px;
+    text-align: center;
+}
+
+.task-group-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* 完了済みタスク用のスタイル */
+.completed-task {
+    opacity: 1;
+}
+
+.completed-task .task-checkbox {
+    background-color: #27ae60;
+    border-color: #27ae60;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.completed-task .task-checkbox i {
+    font-size: 12px;
+}
+
+.completed-task .task-title {
+    color: #7f8c8d;
+}
+
+.completed-info {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 12px;
+    color: #27ae60;
+    margin-top: 8px;
+    margin-bottom: 8px;
+}
+
+.completed-time {
+    font-weight: 500;
+}
+
+.completed-by {
+    color: #7f8c8d;
+}
+
+.completed-by-name {
+    font-weight: 600;
+    font-size: 13px;
+    color: #27ae60;
+}
+
+.completed-task .task-item-top {
+    margin-left: 36px;
+}
+
+/* 日付選択モーダル */
+.date-select-header {
+    display: flex;
+    justify-content: flex-end;
+    margin-bottom: 16px;
+}
+
+.date-shortcuts {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.shortcut-btn {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px 8px;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    background-color: #fff;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.shortcut-btn i {
+    font-size: 18px;
+    color: #7f8c8d;
+}
+
+.shortcut-btn span {
+    font-size: 12px;
+    color: #2c3e50;
+}
+
+.shortcut-btn:hover {
+    background-color: #f8f9fa;
+}
+
+.shortcut-btn.active {
+    background-color: #fff5f5;
+    border-color: #e74c3c;
+}
+
+.shortcut-btn.active i {
+    color: #e74c3c;
+}
+
+.calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    padding: 0 8px;
+}
+
+.month-nav {
+    background: none;
+    border: none;
+    font-size: 18px;
+    color: #7f8c8d;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.current-month {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.calendar-container {
+    margin-bottom: 20px;
+}
+
+.calendar-weekdays {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+    margin-bottom: 8px;
+}
+
+.weekday {
+    text-align: center;
+    font-size: 12px;
+    font-weight: 600;
+    color: #7f8c8d;
+    padding: 8px 0;
+}
+
+.weekday.sunday {
+    color: #e74c3c;
+}
+
+.weekday.saturday {
+    color: #3498db;
+}
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+.calendar-day {
+    aspect-ratio: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #2c3e50;
+}
+
+.calendar-day:hover {
+    background-color: #f8f9fa;
+}
+
+.calendar-day.other-month {
+    color: #bdc3c7;
+}
+
+.calendar-day.today {
+    font-weight: 600;
+    border: 2px solid #e74c3c;
+}
+
+.calendar-day.selected {
+    background-color: #e74c3c;
+    color: #fff;
+    font-weight: 600;
+}
+
+.calendar-day.sunday {
+    color: #e74c3c;
+}
+
+.calendar-day.saturday {
+    color: #3498db;
+}
+
+.calendar-day.other-month.sunday,
+.calendar-day.other-month.saturday {
+    color: #bdc3c7;
+}
+
+.date-select-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.time-btn {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 12px;
+    background-color: #fff;
+    border: 1px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 14px;
+    color: #7f8c8d;
+    cursor: pointer;
+}
+
+.clear-date-btn {
+    padding: 12px 20px;
+    background-color: #fff;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    color: #7f8c8d;
+    cursor: pointer;
+}
+
+.save-date-btn {
+    padding: 12px 32px;
+    background-color: #e74c3c;
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+/* 設定画面 */
+.settings-screen {
+    display: none;
+    flex-direction: column;
+    height: 100vh;
+    background-color: #f5f5f5;
+}
+
+.settings-screen.active {
+    display: flex;
+}
+
+.settings-header {
+    background-color: #fff;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.settings-header h1 {
+    font-size: 24px;
+    font-weight: 700;
+    color: #2c3e50;
+}
+
+.back-btn {
+    background: none;
+    border: none;
+    font-size: 20px;
+    color: #7f8c8d;
+    cursor: pointer;
+}
+
+.settings-content {
+    flex: 1;
+    padding: 20px;
+}
+
+.settings-section {
+    background-color: #fff;
+    border-radius: 12px;
+    margin-bottom: 20px;
+    overflow: hidden;
+}
+
+.settings-item {
+    display: flex;
+    align-items: center;
+    padding: 16px 20px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.settings-item:last-child {
+    border-bottom: none;
+}
+
+.settings-item:hover {
+    background-color: #f8f9fa;
+}
+
+.settings-item-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 16px;
+    font-size: 20px;
+    color: #fff;
+}
+
+.settings-item-icon.account {
+    background-color: #ff6b35;
+}
+
+.settings-item-icon.general {
+    background-color: #4a90e2;
+}
+
+.settings-item-icon.notification {
+    background-color: #f5a623;
+}
+
+.settings-item-icon.logout {
+    background-color: #e74c3c;
+}
+
+.settings-item-content {
+    flex: 1;
+}
+
+.settings-item-title {
+    font-size: 16px;
+    font-weight: 500;
+    color: #2c3e50;
+    margin-bottom: 4px;
+}
+
+.settings-item-subtitle {
+    font-size: 14px;
+    color: #7f8c8d;
+}
+
+.settings-item-arrow {
+    color: #bdc3c7;
+    font-size: 16px;
+}
+
+.settings-footer {
+    text-align: center;
+    padding: 40px 20px;
+    color: #95a5a6;
+}
+
+.app-version {
+    font-size: 16px;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.app-description {
+    font-size: 14px;
+}
+
+/* アラートモーダル */
+.alert-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.alert-modal.active {
+    display: flex;
+}
+
+.alert-modal-content {
+    background-color: #fff;
+    width: 100%;
+    max-width: 320px;
+    border-radius: 16px;
+    padding: 24px;
+    text-align: center;
+    animation: alertSlideUp 0.3s ease-out;
+}
+
+@keyframes alertSlideUp {
+    from {
+        transform: translateY(20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+.alert-icon {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background-color: #4a90e2;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    font-size: 24px;
+    color: #fff;
+}
+
+.alert-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 8px;
+}
+
+.alert-message {
+    font-size: 14px;
+    color: #7f8c8d;
+    line-height: 1.5;
+    margin-bottom: 24px;
+}
+
+.alert-actions {
+    display: flex;
+    gap: 12px;
+}
+
+.alert-btn {
+    flex: 1;
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.alert-btn.cancel {
+    background-color: #f0f0f0;
+    color: #7f8c8d;
+}
+
+.alert-btn.cancel:hover {
+    background-color: #e0e0e0;
+}
+
+.alert-btn.confirm {
+    background-color: #4a90e2;
+    color: #fff;
+}
+
+.alert-btn.confirm:hover {
+    background-color: #357abd;
+}
+
+/* 画面切り替え */
+.screen {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.screen.hidden {
+    display: none;
+}

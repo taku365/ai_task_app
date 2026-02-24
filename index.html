@@ -1,0 +1,2654 @@
+<!doctype html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>タスク管理</title>
+        <link
+            rel="stylesheet"
+            href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+        />
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                font-family:
+                    -apple-system, BlinkMacSystemFont, "Segoe UI",
+                    "Hiragino Sans", "Hiragino Kaku Gothic ProN", Meiryo,
+                    sans-serif;
+                background-color: #f5f5f5;
+                color: #2c3e50;
+                max-width: 480px;
+                margin: 0 auto;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* ヘッダー */
+            .header {
+                background-color: #fff;
+                padding: 16px 20px;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            }
+
+            .header h1 {
+                font-size: 24px;
+                font-weight: 700;
+                color: #2c3e50;
+            }
+
+            .header-icons {
+                display: flex;
+                gap: 16px;
+            }
+
+            .header-icons i {
+                font-size: 20px;
+                color: #7f8c8d;
+                cursor: pointer;
+            }
+
+            /* フィルタータブ */
+            .filter-tabs {
+                background-color: #fff;
+                padding: 16px 20px;
+                display: flex;
+                gap: 12px;
+                overflow-x: auto;
+                border-bottom: 1px solid #e0e0e0;
+            }
+
+            .filter-tab {
+                padding: 8px 20px;
+                border-radius: 20px;
+                border: none;
+                background-color: #f5f5f5;
+                color: #7f8c8d;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                white-space: nowrap;
+                transition: all 0.3s;
+            }
+
+            .filter-tab.active {
+                background-color: #2c3e50;
+                color: #fff;
+            }
+
+            /* タスクリスト */
+            .task-list-container {
+                flex: 1;
+                overflow-y: auto;
+                padding: 20px;
+            }
+
+            .task-group {
+                margin-bottom: 24px;
+            }
+
+            .task-group-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 12px;
+            }
+
+            .task-group-title {
+                font-size: 14px;
+                font-weight: 600;
+                color: #e74c3c;
+            }
+
+            .task-group-count {
+                background-color: #e8f4ff;
+                color: #3498db;
+                padding: 2px 10px;
+                border-radius: 12px;
+                font-size: 12px;
+                font-weight: 600;
+            }
+
+            .task-item {
+                background-color: #fff;
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 12px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .task-item:hover {
+                box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            }
+
+            .task-item-top {
+                display: flex;
+                align-items: flex-start;
+                gap: 12px;
+                margin-bottom: 12px;
+            }
+
+            .task-checkbox {
+                width: 24px;
+                height: 24px;
+                border: 2px solid #e0e0e0;
+                border-radius: 50%;
+                cursor: pointer;
+                flex-shrink: 0;
+                margin-top: 2px;
+            }
+
+            .task-checkbox.priority-high {
+                border-color: #e74c3c;
+            }
+
+            .task-checkbox.priority-medium {
+                border-color: #f39c12;
+            }
+
+            .task-title {
+                flex: 1;
+                font-size: 16px;
+                font-weight: 500;
+                color: #2c3e50;
+                line-height: 1.5;
+            }
+
+            .task-meta {
+                display: flex;
+                gap: 16px;
+                margin-left: 36px;
+                flex-wrap: wrap;
+            }
+
+            .task-meta-item {
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                font-size: 13px;
+                color: #7f8c8d;
+            }
+
+            .task-meta-item i {
+                font-size: 12px;
+            }
+
+            .task-meta-item.priority-high {
+                color: #e74c3c;
+            }
+
+            .task-meta-item.priority-medium {
+                color: #f39c12;
+            }
+
+            /* 音声入力ボタン */
+            .voice-input-btn {
+                position: fixed;
+                bottom: 100px;
+                right: 20px;
+                width: 64px;
+                height: 64px;
+                border-radius: 50%;
+                background-color: #e74c3c;
+                color: #fff;
+                border: none;
+                box-shadow: 0 4px 12px rgba(231, 76, 60, 0.4);
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 24px;
+                transition: all 0.3s;
+                z-index: 100;
+            }
+
+            .voice-input-btn:hover {
+                transform: scale(1.1);
+                box-shadow: 0 6px 16px rgba(231, 76, 60, 0.5);
+            }
+
+            /* ボトムナビ */
+            .bottom-nav {
+                background-color: #fff;
+                padding: 12px 0;
+                display: flex;
+                justify-content: space-around;
+                box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+            }
+
+            .nav-item {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+                cursor: pointer;
+                padding: 8px 24px;
+                color: #95a5a6;
+                text-decoration: none;
+                transition: all 0.3s;
+            }
+
+            .nav-item.active {
+                color: #e74c3c;
+            }
+
+            .nav-item i {
+                font-size: 20px;
+            }
+
+            .nav-item span {
+                font-size: 12px;
+                font-weight: 500;
+            }
+
+            /* モーダル共通スタイル */
+            .modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 1000;
+                align-items: flex-end;
+                justify-content: center;
+            }
+
+            .modal.active {
+                display: flex;
+            }
+
+            .modal-content {
+                background-color: #fff;
+                width: 100%;
+                max-width: 480px;
+                border-radius: 24px 24px 0 0;
+                padding: 24px;
+                max-height: 90vh;
+                overflow-y: auto;
+                animation: slideUp 0.3s ease-out;
+            }
+
+            @keyframes slideUp {
+                from {
+                    transform: translateY(100%);
+                }
+                to {
+                    transform: translateY(0);
+                }
+            }
+
+            /* 入力モーダル */
+            .input-modal-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 24px;
+            }
+
+            .input-modal-header h2 {
+                font-size: 20px;
+                font-weight: 600;
+            }
+
+            .close-btn {
+                background: none;
+                border: none;
+                font-size: 24px;
+                color: #7f8c8d;
+                cursor: pointer;
+            }
+
+            .input-area {
+                margin-bottom: 24px;
+            }
+
+            .input-area textarea {
+                width: 100%;
+                min-height: 120px;
+                padding: 16px;
+                border: 2px solid #e0e0e0;
+                border-radius: 12px;
+                font-size: 16px;
+                font-family: inherit;
+                resize: vertical;
+            }
+
+            .input-area textarea:focus {
+                outline: none;
+                border-color: #e74c3c;
+            }
+
+            .submit-btn {
+                width: 100%;
+                padding: 16px;
+                background-color: #e74c3c;
+                color: #fff;
+                border: none;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+
+            .submit-btn:hover {
+                background-color: #c0392b;
+            }
+
+            .submit-btn:disabled {
+                background-color: #bdc3c7;
+                cursor: not-allowed;
+            }
+
+            /* タスク詳細モーダル */
+            .task-detail-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 24px;
+            }
+
+            .task-detail-header .close-btn {
+                font-size: 24px;
+            }
+
+            .delete-btn {
+                background: none;
+                border: none;
+                color: #e74c3c;
+                font-size: 20px;
+                cursor: pointer;
+            }
+
+            .task-detail-content {
+                margin-bottom: 24px;
+            }
+
+            .task-detail-title {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                margin-bottom: 24px;
+            }
+
+            .task-detail-title input {
+                flex: 1;
+                font-size: 18px;
+                font-weight: 600;
+                border: none;
+                background: transparent;
+                color: #2c3e50;
+            }
+
+            .task-detail-title input:focus {
+                outline: none;
+            }
+
+            .detail-field {
+                background-color: #f8f9fa;
+                border-radius: 12px;
+                padding: 16px;
+                margin-bottom: 12px;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .detail-field:hover {
+                background-color: #ecf0f1;
+            }
+
+            .detail-field-label {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 12px;
+                color: #7f8c8d;
+                margin-bottom: 8px;
+            }
+
+            .detail-field-label i {
+                color: #e74c3c;
+                font-size: 14px;
+            }
+
+            .detail-field-value {
+                font-size: 16px;
+                font-weight: 500;
+                color: #2c3e50;
+            }
+
+            .priority-buttons {
+                display: flex;
+                gap: 12px;
+                margin-top: 8px;
+            }
+
+            .priority-btn {
+                flex: 1;
+                padding: 10px;
+                border: 2px solid #e0e0e0;
+                border-radius: 8px;
+                background-color: #fff;
+                font-size: 14px;
+                font-weight: 500;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+
+            .priority-btn.active.high {
+                background-color: #e74c3c;
+                border-color: #e74c3c;
+                color: #fff;
+            }
+
+            .priority-btn.active.medium {
+                background-color: #f39c12;
+                border-color: #f39c12;
+                color: #fff;
+            }
+
+            .priority-btn.active.low {
+                background-color: #95a5a6;
+                border-color: #95a5a6;
+                color: #fff;
+            }
+
+            .task-detail-actions {
+                display: flex;
+                gap: 12px;
+            }
+
+            .complete-btn {
+                flex: 1;
+                padding: 16px;
+                background-color: #fff;
+                border: 2px solid #e0e0e0;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+
+            .complete-btn:hover {
+                background-color: #f8f9fa;
+            }
+
+            .save-btn {
+                flex: 2;
+                padding: 16px;
+                background-color: #e74c3c;
+                color: #fff;
+                border: none;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s;
+            }
+
+            .save-btn:hover {
+                background-color: #c0392b;
+            }
+
+            /* メンバー選択モーダル */
+            .member-select-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+
+            .member-select-header h2 {
+                font-size: 20px;
+                font-weight: 600;
+            }
+
+            .search-box {
+                position: relative;
+                margin-bottom: 20px;
+            }
+
+            .search-box input {
+                width: 100%;
+                padding: 12px 16px 12px 40px;
+                border: 1px solid #e0e0e0;
+                border-radius: 12px;
+                font-size: 14px;
+                background-color: #f8f9fa;
+            }
+
+            .search-box input:focus {
+                outline: none;
+                border-color: #e74c3c;
+            }
+
+            .search-box i {
+                position: absolute;
+                left: 14px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #95a5a6;
+            }
+
+            .member-list {
+                margin-bottom: 20px;
+                max-height: 400px;
+                overflow-y: auto;
+            }
+
+            .member-item {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                padding: 12px;
+                cursor: pointer;
+                border-radius: 8px;
+                transition: all 0.2s;
+            }
+
+            .member-item:hover {
+                background-color: #f8f9fa;
+            }
+
+            .member-avatar {
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                background-color: #3498db;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #fff;
+                font-weight: 600;
+                font-size: 18px;
+            }
+
+            .member-name {
+                flex: 1;
+                font-size: 16px;
+                font-weight: 500;
+            }
+
+            .member-check {
+                width: 24px;
+                height: 24px;
+                border: 2px solid #e0e0e0;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .member-check.selected {
+                background-color: #e74c3c;
+                border-color: #e74c3c;
+                color: #fff;
+            }
+
+            .member-select-actions {
+                display: flex;
+                gap: 12px;
+            }
+
+            .clear-btn {
+                flex: 1;
+                padding: 16px;
+                background-color: #fff;
+                border: 2px solid #e0e0e0;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+            }
+
+            .apply-btn {
+                flex: 2;
+                padding: 16px;
+                background-color: #e74c3c;
+                color: #fff;
+                border: none;
+                border-radius: 12px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+            }
+
+            /* ローディング */
+            .loading {
+                text-align: center;
+                padding: 20px;
+                color: #7f8c8d;
+            }
+
+            /* 空状態 */
+            .empty-state {
+                text-align: center;
+                padding: 60px 20px;
+                color: #95a5a6;
+            }
+
+            .empty-state i {
+                font-size: 64px;
+                margin-bottom: 16px;
+                opacity: 0.3;
+            }
+
+            .empty-state p {
+                font-size: 16px;
+            }
+
+            /* グループ表示 */
+            .task-group {
+                margin-bottom: 24px;
+            }
+
+            .task-group-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 12px;
+                padding: 0 4px;
+            }
+
+            .task-group-title {
+                font-size: 14px;
+                font-weight: 600;
+                color: #2c3e50;
+            }
+
+            .task-group-count {
+                background-color: #e8f4ff;
+                color: #3498db;
+                padding: 2px 8px;
+                border-radius: 10px;
+                font-size: 12px;
+                font-weight: 600;
+                min-width: 20px;
+                text-align: center;
+            }
+
+            .task-group-items {
+                display: flex;
+                flex-direction: column;
+                gap: 12px;
+            }
+
+            /* 完了済みタスク用のスタイル */
+            .completed-task {
+                opacity: 1;
+            }
+
+            .completed-task .task-checkbox {
+                background-color: #27ae60;
+                border-color: #27ae60;
+                color: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .completed-task .task-checkbox i {
+                font-size: 12px;
+            }
+
+            .completed-task .task-title {
+                color: #7f8c8d;
+            }
+
+            .completed-info {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                font-size: 12px;
+                color: #27ae60;
+                margin-top: 8px;
+                margin-bottom: 8px; /* メタ情報との間隔 */
+            }
+
+            .completed-time {
+                font-weight: 500;
+            }
+
+            .completed-by {
+                color: #7f8c8d;
+            }
+
+            .completed-by-name {
+                font-weight: 600;
+                font-size: 13px;
+                color: #27ae60;
+            }
+
+            /* 完了済みタスクのタイトル部分の調整 */
+            .completed-task .task-item-top {
+                margin-left: 36px; /* チェックボックス分のインデント */
+            }
+
+            /* 日付選択モーダル */
+            .date-select-header {
+                display: flex;
+                justify-content: flex-end;
+                margin-bottom: 16px;
+            }
+
+            .date-shortcuts {
+                display: flex;
+                gap: 8px;
+                margin-bottom: 20px;
+            }
+
+            .shortcut-btn {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                gap: 4px;
+                padding: 12px 8px;
+                border: 1px solid #e0e0e0;
+                border-radius: 12px;
+                background-color: #fff;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .shortcut-btn i {
+                font-size: 18px;
+                color: #7f8c8d;
+            }
+
+            .shortcut-btn span {
+                font-size: 12px;
+                color: #2c3e50;
+            }
+
+            .shortcut-btn:hover {
+                background-color: #f8f9fa;
+            }
+
+            .shortcut-btn.active {
+                background-color: #fff5f5;
+                border-color: #e74c3c;
+            }
+
+            .shortcut-btn.active i {
+                color: #e74c3c;
+            }
+
+            .calendar-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 16px;
+                padding: 0 8px;
+            }
+
+            .month-nav {
+                background: none;
+                border: none;
+                font-size: 18px;
+                color: #7f8c8d;
+                cursor: pointer;
+                padding: 8px;
+            }
+
+            .current-month {
+                font-size: 16px;
+                font-weight: 600;
+                color: #2c3e50;
+            }
+
+            .calendar-container {
+                margin-bottom: 20px;
+            }
+
+            .calendar-weekdays {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                gap: 4px;
+                margin-bottom: 8px;
+            }
+
+            .weekday {
+                text-align: center;
+                font-size: 12px;
+                font-weight: 600;
+                color: #7f8c8d;
+                padding: 8px 0;
+            }
+
+            .weekday.sunday {
+                color: #e74c3c;
+            }
+
+            .weekday.saturday {
+                color: #3498db;
+            }
+
+            .calendar-grid {
+                display: grid;
+                grid-template-columns: repeat(7, 1fr);
+                gap: 4px;
+            }
+
+            .calendar-day {
+                aspect-ratio: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                border-radius: 50%;
+                font-size: 14px;
+                cursor: pointer;
+                transition: all 0.2s;
+                color: #2c3e50;
+            }
+
+            .calendar-day:hover {
+                background-color: #f8f9fa;
+            }
+
+            .calendar-day.other-month {
+                color: #bdc3c7;
+            }
+
+            .calendar-day.today {
+                font-weight: 600;
+                border: 2px solid #e74c3c;
+            }
+
+            .calendar-day.selected {
+                background-color: #e74c3c;
+                color: #fff;
+                font-weight: 600;
+            }
+
+            .calendar-day.sunday {
+                color: #e74c3c;
+            }
+
+            .calendar-day.saturday {
+                color: #3498db;
+            }
+
+            .calendar-day.other-month.sunday,
+            .calendar-day.other-month.saturday {
+                color: #bdc3c7;
+            }
+
+            .date-select-actions {
+                display: flex;
+                gap: 12px;
+                align-items: center;
+            }
+
+            .time-btn {
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 6px;
+                padding: 12px;
+                background-color: #fff;
+                border: 1px solid #e0e0e0;
+                border-radius: 12px;
+                font-size: 14px;
+                color: #7f8c8d;
+                cursor: pointer;
+            }
+
+            .clear-date-btn {
+                padding: 12px 20px;
+                background-color: #fff;
+                border: 2px solid #e0e0e0;
+                border-radius: 12px;
+                font-size: 14px;
+                font-weight: 600;
+                color: #7f8c8d;
+                cursor: pointer;
+            }
+
+            .save-date-btn {
+                padding: 12px 32px;
+                background-color: #e74c3c;
+                color: #fff;
+                border: none;
+                border-radius: 12px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+            }
+
+            /* 設定画面 */
+            .settings-screen {
+                display: none;
+                flex-direction: column;
+                height: 100vh;
+                background-color: #f5f5f5;
+            }
+
+            .settings-screen.active {
+                display: flex;
+            }
+
+            .settings-header {
+                background-color: #fff;
+                padding: 16px 20px;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+            }
+
+            .settings-header h1 {
+                font-size: 24px;
+                font-weight: 700;
+                color: #2c3e50;
+            }
+
+            .back-btn {
+                background: none;
+                border: none;
+                font-size: 20px;
+                color: #7f8c8d;
+                cursor: pointer;
+            }
+
+            .settings-content {
+                flex: 1;
+                padding: 20px;
+            }
+
+            .settings-section {
+                background-color: #fff;
+                border-radius: 12px;
+                margin-bottom: 20px;
+                overflow: hidden;
+            }
+
+            .settings-item {
+                display: flex;
+                align-items: center;
+                padding: 16px 20px;
+                border-bottom: 1px solid #f0f0f0;
+                cursor: pointer;
+                transition: background-color 0.2s;
+            }
+
+            .settings-item:last-child {
+                border-bottom: none;
+            }
+
+            .settings-item:hover {
+                background-color: #f8f9fa;
+            }
+
+            .settings-item-icon {
+                width: 48px;
+                height: 48px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin-right: 16px;
+                font-size: 20px;
+                color: #fff;
+            }
+
+            .settings-item-icon.account {
+                background-color: #ff6b35;
+            }
+
+            .settings-item-icon.general {
+                background-color: #4a90e2;
+            }
+
+            .settings-item-icon.notification {
+                background-color: #f5a623;
+            }
+
+            .settings-item-icon.logout {
+                background-color: #e74c3c;
+            }
+
+            .settings-item-content {
+                flex: 1;
+            }
+
+            .settings-item-title {
+                font-size: 16px;
+                font-weight: 500;
+                color: #2c3e50;
+                margin-bottom: 4px;
+            }
+
+            .settings-item-subtitle {
+                font-size: 14px;
+                color: #7f8c8d;
+            }
+
+            .settings-item-arrow {
+                color: #bdc3c7;
+                font-size: 16px;
+            }
+
+            .settings-footer {
+                text-align: center;
+                padding: 40px 20px;
+                color: #95a5a6;
+            }
+
+            .app-version {
+                font-size: 16px;
+                font-weight: 600;
+                margin-bottom: 4px;
+            }
+
+            .app-description {
+                font-size: 14px;
+            }
+
+            /* アラートモーダル */
+            .alert-modal {
+                display: none;
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background-color: rgba(0, 0, 0, 0.5);
+                z-index: 2000;
+                align-items: center;
+                justify-content: center;
+                padding: 20px;
+            }
+
+            .alert-modal.active {
+                display: flex;
+            }
+
+            .alert-modal-content {
+                background-color: #fff;
+                width: 100%;
+                max-width: 320px;
+                border-radius: 16px;
+                padding: 24px;
+                text-align: center;
+                animation: alertSlideUp 0.3s ease-out;
+            }
+
+            @keyframes alertSlideUp {
+                from {
+                    transform: translateY(20px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateY(0);
+                    opacity: 1;
+                }
+            }
+
+            .alert-icon {
+                width: 64px;
+                height: 64px;
+                border-radius: 50%;
+                background-color: #4a90e2;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                margin: 0 auto 16px;
+                font-size: 24px;
+                color: #fff;
+            }
+
+            .alert-title {
+                font-size: 18px;
+                font-weight: 600;
+                color: #2c3e50;
+                margin-bottom: 8px;
+            }
+
+            .alert-message {
+                font-size: 14px;
+                color: #7f8c8d;
+                line-height: 1.5;
+                margin-bottom: 24px;
+            }
+
+            .alert-actions {
+                display: flex;
+                gap: 12px;
+            }
+
+            .alert-btn {
+                flex: 1;
+                padding: 12px;
+                border: none;
+                border-radius: 8px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.2s;
+            }
+
+            .alert-btn.cancel {
+                background-color: #f0f0f0;
+                color: #7f8c8d;
+            }
+
+            .alert-btn.cancel:hover {
+                background-color: #e0e0e0;
+            }
+
+            .alert-btn.confirm {
+                background-color: #4a90e2;
+                color: #fff;
+            }
+
+            .alert-btn.confirm:hover {
+                background-color: #357abd;
+            }
+
+            /* 画面切り替え */
+            .screen {
+                display: flex;
+                flex-direction: column;
+                height: 100vh;
+            }
+
+            .screen.hidden {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- メイン画面 -->
+        <div class="screen" id="mainScreen">
+            <!-- ヘッダー -->
+            <div class="header">
+                <h1>タスク</h1>
+                <div class="header-icons">
+                    <i class="fas fa-search"></i>
+                    <i class="fas fa-bell"></i>
+                </div>
+            </div>
+
+            <!-- フィルタータブ -->
+            <div class="filter-tabs">
+                <button class="filter-tab active" data-filter="self">
+                    自分
+                </button>
+                <button class="filter-tab" data-filter="member">
+                    メンバー
+                </button>
+                <button class="filter-tab" data-filter="unassigned">
+                    未割当
+                </button>
+                <button class="filter-tab" data-filter="completed">
+                    完了済み
+                </button>
+            </div>
+
+            <!-- タスクリスト -->
+            <div class="task-list-container" id="taskListContainer">
+                <div class="empty-state">
+                    <i class="fas fa-clipboard-list"></i>
+                    <p>タスクがありません</p>
+                </div>
+            </div>
+
+            <!-- 音声入力ボタン -->
+            <button class="voice-input-btn" id="voiceInputBtn">
+                <i class="fas fa-microphone"></i>
+            </button>
+
+            <!-- ボトムナビ -->
+            <div class="bottom-nav">
+                <a href="#" class="nav-item active" id="taskNavBtn">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>タスク</span>
+                </a>
+                <a href="#" class="nav-item" id="settingsNavBtn">
+                    <i class="fas fa-cog"></i>
+                    <span>設定</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 設定画面 -->
+        <div class="settings-screen" id="settingsScreen">
+            <div class="settings-header">
+                <button class="back-btn" id="backToMainBtn">
+                    <i class="fas fa-arrow-left"></i>
+                </button>
+                <h1>設定</h1>
+            </div>
+
+            <div class="settings-content">
+                <div class="settings-section">
+                    <div class="settings-item">
+                        <div class="settings-item-icon account">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div class="settings-item-content">
+                            <div class="settings-item-title">アカウント</div>
+                            <div class="settings-item-subtitle">
+                                user@example.com
+                            </div>
+                        </div>
+                        <div class="settings-item-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-item">
+                        <div class="settings-item-icon general">
+                            <i class="fas fa-cog"></i>
+                        </div>
+                        <div class="settings-item-content">
+                            <div class="settings-item-title">一般設定</div>
+                        </div>
+                        <div class="settings-item-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+
+                    <div class="settings-item">
+                        <div class="settings-item-icon notification">
+                            <i class="fas fa-bell"></i>
+                        </div>
+                        <div class="settings-item-content">
+                            <div class="settings-item-title">通知</div>
+                        </div>
+                        <div class="settings-item-arrow">
+                            <i class="fas fa-chevron-right"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <div class="settings-item">
+                        <div class="settings-item-icon logout">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </div>
+                        <div class="settings-item-content">
+                            <div class="settings-item-title">ログアウト</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="settings-footer">
+                <div class="app-version">VoiceTask v1.0.0</div>
+                <div class="app-description">音声でタスクを管理</div>
+            </div>
+
+            <!-- 音声入力ボタン（設定画面用） -->
+            <button class="voice-input-btn" id="voiceInputBtnSettings">
+                <i class="fas fa-plus"></i>
+            </button>
+
+            <!-- ボトムナビ（設定画面用） -->
+            <div class="bottom-nav">
+                <a href="#" class="nav-item" id="taskNavBtnSettings">
+                    <i class="fas fa-clipboard-list"></i>
+                    <span>タスク</span>
+                </a>
+                <a href="#" class="nav-item active" id="settingsNavBtnActive">
+                    <i class="fas fa-cog"></i>
+                    <span>設定</span>
+                </a>
+            </div>
+        </div>
+
+        <!-- 入力モーダル -->
+        <div class="modal" id="inputModal">
+            <div class="modal-content">
+                <div class="input-modal-header">
+                    <h2>タスクを入力</h2>
+                    <button class="close-btn" id="closeInputModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="input-area">
+                    <textarea
+                        id="taskInput"
+                        placeholder="例: 明日までに白石くんに報告書を提出"
+                    ></textarea>
+                </div>
+                <button class="submit-btn" id="submitTask">解析して保存</button>
+            </div>
+        </div>
+
+        <!-- タスク詳細モーダル -->
+        <div class="modal" id="taskDetailModal">
+            <div class="modal-content">
+                <div class="task-detail-header">
+                    <button class="close-btn" id="closeTaskDetailModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                    <button class="delete-btn" id="deleteTaskBtn">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+                <div class="task-detail-content">
+                    <div class="task-detail-title">
+                        <div class="task-checkbox" id="detailCheckbox"></div>
+                        <input
+                            type="text"
+                            id="detailTaskTitle"
+                            value=""
+                            placeholder="タスクを入力してください"
+                        />
+                    </div>
+
+                    <div class="detail-field" id="dateField">
+                        <div class="detail-field-label">
+                            <i class="fas fa-calendar"></i>
+                            <span>期限</span>
+                        </div>
+                        <div class="detail-field-value" id="detailDate">
+                            2026/02/04
+                        </div>
+                    </div>
+
+                    <div class="detail-field" id="assigneeField">
+                        <div class="detail-field-label">
+                            <i class="fas fa-user"></i>
+                            <span>担当者</span>
+                        </div>
+                        <div class="detail-field-value" id="detailAssignee">
+                            あなた
+                        </div>
+                    </div>
+
+                    <div class="detail-field">
+                        <div class="detail-field-label">
+                            <i class="fas fa-flag"></i>
+                            <span>優先度</span>
+                        </div>
+                        <div class="priority-buttons">
+                            <button class="priority-btn" data-priority="高">
+                                高
+                            </button>
+                            <button class="priority-btn" data-priority="中">
+                                中
+                            </button>
+                            <button class="priority-btn" data-priority="低">
+                                低
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="task-detail-actions">
+                    <button class="complete-btn" id="completeTaskBtn">
+                        完了にする
+                    </button>
+                    <button class="save-btn" id="saveTaskBtn">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- メンバー選択モーダル -->
+        <div class="modal" id="memberSelectModal">
+            <div class="modal-content">
+                <div class="member-select-header">
+                    <h2>メンバーを選択</h2>
+                    <button class="close-btn" id="closeMemberModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input
+                        type="text"
+                        id="memberSearch"
+                        placeholder="名前で検索..."
+                    />
+                </div>
+                <div class="member-list" id="memberList">
+                    <!-- メンバーリストはJSで生成 -->
+                </div>
+                <div class="member-select-actions">
+                    <button class="clear-btn" id="clearMemberBtn">
+                        クリア
+                    </button>
+                    <button class="apply-btn" id="applyMemberBtn">
+                        適用する
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 日付選択モーダル -->
+        <div class="modal" id="dateSelectModal">
+            <div class="modal-content">
+                <div class="date-select-header">
+                    <button class="close-btn" id="closeDateModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- ショートカットボタン -->
+                <div class="date-shortcuts">
+                    <button class="shortcut-btn" id="todayBtn">
+                        <i class="fas fa-sun"></i>
+                        <span>今日</span>
+                    </button>
+                    <button class="shortcut-btn" id="tomorrowBtn">
+                        <i class="fas fa-arrow-up"></i>
+                        <span>明日</span>
+                    </button>
+                    <button class="shortcut-btn" id="weekendBtn">
+                        <i class="fas fa-car"></i>
+                        <span>週末</span>
+                    </button>
+                    <button class="shortcut-btn" id="nextWeekBtn">
+                        <i class="fas fa-calendar"></i>
+                        <span>来週</span>
+                    </button>
+                </div>
+
+                <!-- カレンダーヘッダー -->
+                <div class="calendar-header">
+                    <button class="month-nav" id="prevMonth">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <span class="current-month" id="currentMonth"
+                        >2024年 2月</span
+                    >
+                    <button class="month-nav" id="nextMonth">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+
+                <!-- カレンダー -->
+                <div class="calendar-container">
+                    <div class="calendar-weekdays">
+                        <div class="weekday sunday">日</div>
+                        <div class="weekday">月</div>
+                        <div class="weekday">火</div>
+                        <div class="weekday">水</div>
+                        <div class="weekday">木</div>
+                        <div class="weekday">金</div>
+                        <div class="weekday saturday">土</div>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- 日付セルはJSで生成 -->
+                    </div>
+                </div>
+
+                <!-- アクション -->
+                <div class="date-select-actions">
+                    <button class="time-btn" id="timeBtn">
+                        <i class="far fa-clock"></i>
+                        <span>時間を選択</span>
+                    </button>
+                    <button class="clear-date-btn" id="clearDateBtn">
+                        クリア
+                    </button>
+                    <button class="save-date-btn" id="saveDateBtn">保存</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- アラートモーダル -->
+        <div class="alert-modal" id="alertModal">
+            <div class="alert-modal-content">
+                <div class="alert-icon" id="alertIcon">
+                    <i class="fas fa-user" id="alertIconContent"></i>
+                </div>
+                <div class="alert-title" id="alertTitle">
+                    他メンバーのタスクです
+                </div>
+                <div class="alert-message" id="alertMessage">
+                    このタスクは<strong>田中美咲</strong>さんに割り当てられています。完了にしてもよろしいですか？
+                </div>
+                <div class="alert-actions">
+                    <button class="alert-btn cancel" id="alertCancelBtn">
+                        キャンセル
+                    </button>
+                    <button class="alert-btn confirm" id="alertConfirmBtn">
+                        完了にする
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            // const API_KEY = "秘密";
+
+            // 現在のログインユーザー
+            const CURRENT_USER = "松田";
+
+            // メンバーリスト
+            const MEMBERS = [
+                { id: 1, name: "松本" },
+                { id: 2, name: "野中" },
+                { id: 3, name: "白石" },
+                { id: 4, name: "松波" },
+                { id: 5, name: "宮原" },
+                { id: 6, name: "安岡" },
+                { id: 7, name: "松田" },
+            ];
+
+            // 現在編集中のタスク
+            let currentTask = null;
+            let selectedMember = null;
+
+            // 日付選択用の変数
+            let selectedDate = null;
+            let currentYear = new Date().getFullYear();
+            let currentMonth = new Date().getMonth();
+
+            // アラート用の変数
+            let alertCallback = null;
+
+            // 初期化
+            document.addEventListener("DOMContentLoaded", () => {
+                loadTasks();
+                setupEventListeners();
+            });
+
+            // イベントリスナー設定
+            function setupEventListeners() {
+                // 音声入力ボタン
+                document
+                    .getElementById("voiceInputBtn")
+                    .addEventListener("click", () => {
+                        openNewTaskModal();
+                    });
+
+                // モーダルを閉じる
+                document
+                    .getElementById("closeInputModal")
+                    .addEventListener("click", () => {
+                        closeModal("inputModal");
+                    });
+                document
+                    .getElementById("closeTaskDetailModal")
+                    .addEventListener("click", () => {
+                        closeModal("taskDetailModal");
+                    });
+                document
+                    .getElementById("closeMemberModal")
+                    .addEventListener("click", () => {
+                        closeModal("memberSelectModal");
+                    });
+                document
+                    .getElementById("closeDateModal")
+                    .addEventListener("click", () => {
+                        closeModal("dateSelectModal");
+                    });
+
+                // タスク送信
+                document
+                    .getElementById("submitTask")
+                    .addEventListener("click", submitTask);
+
+                // 担当者フィールドクリック
+                document
+                    .getElementById("assigneeField")
+                    .addEventListener("click", () => {
+                        openMemberSelect();
+                    });
+
+                // 日付フィールドクリック
+                document
+                    .getElementById("dateField")
+                    .addEventListener("click", () => {
+                        openDateSelectModal();
+                    });
+
+                // メンバー選択
+                document
+                    .getElementById("applyMemberBtn")
+                    .addEventListener("click", applyMember);
+                document
+                    .getElementById("clearMemberBtn")
+                    .addEventListener("click", () => {
+                        selectedMember = null;
+                        renderMemberList();
+                    });
+
+                // 優先度ボタン
+                document.querySelectorAll(".priority-btn").forEach((btn) => {
+                    btn.addEventListener("click", (e) => {
+                        document
+                            .querySelectorAll(".priority-btn")
+                            .forEach((b) => {
+                                b.classList.remove(
+                                    "active",
+                                    "high",
+                                    "medium",
+                                    "low",
+                                );
+                            });
+                        const priority = e.target.dataset.priority;
+                        e.target.classList.add("active");
+                        if (priority === "高") e.target.classList.add("high");
+                        if (priority === "中") e.target.classList.add("medium");
+                        if (priority === "低") e.target.classList.add("low");
+                    });
+                });
+
+                // タスク保存
+                document
+                    .getElementById("saveTaskBtn")
+                    .addEventListener("click", saveTask);
+
+                // タスク完了
+                document
+                    .getElementById("completeTaskBtn")
+                    .addEventListener("click", completeTask);
+
+                // タスク削除
+                document
+                    .getElementById("deleteTaskBtn")
+                    .addEventListener("click", deleteTask);
+
+                // フィルタータブ
+                document.querySelectorAll(".filter-tab").forEach((tab) => {
+                    tab.addEventListener("click", (e) => {
+                        document
+                            .querySelectorAll(".filter-tab")
+                            .forEach((t) => t.classList.remove("active"));
+                        e.target.classList.add("active");
+                        const filter = e.target.dataset.filter;
+                        filterTasks(filter);
+                    });
+                });
+
+                // 日付選択モーダルのイベント
+                document
+                    .getElementById("todayBtn")
+                    .addEventListener("click", () => selectShortcut("today"));
+                document
+                    .getElementById("tomorrowBtn")
+                    .addEventListener("click", () =>
+                        selectShortcut("tomorrow"),
+                    );
+                document
+                    .getElementById("weekendBtn")
+                    .addEventListener("click", () => selectShortcut("weekend"));
+                document
+                    .getElementById("nextWeekBtn")
+                    .addEventListener("click", () =>
+                        selectShortcut("nextWeek"),
+                    );
+                document
+                    .getElementById("prevMonth")
+                    .addEventListener("click", () => changeMonth(-1));
+                document
+                    .getElementById("nextMonth")
+                    .addEventListener("click", () => changeMonth(1));
+                document
+                    .getElementById("saveDateBtn")
+                    .addEventListener("click", saveDateSelection);
+                document
+                    .getElementById("clearDateBtn")
+                    .addEventListener("click", clearDateSelection);
+
+                // 画面切り替え
+                document
+                    .getElementById("settingsNavBtn")
+                    .addEventListener("click", (e) => {
+                        e.preventDefault();
+                        showScreen("settings");
+                    });
+                document
+                    .getElementById("settingsNavBtnActive")
+                    .addEventListener("click", (e) => {
+                        e.preventDefault();
+                        showScreen("settings");
+                    });
+                document
+                    .getElementById("taskNavBtn")
+                    .addEventListener("click", (e) => {
+                        e.preventDefault();
+                        showScreen("main");
+                    });
+                document
+                    .getElementById("taskNavBtnSettings")
+                    .addEventListener("click", (e) => {
+                        e.preventDefault();
+                        showScreen("main");
+                    });
+                document
+                    .getElementById("backToMainBtn")
+                    .addEventListener("click", () => {
+                        showScreen("main");
+                    });
+                document
+                    .getElementById("voiceInputBtnSettings")
+                    .addEventListener("click", () => {
+                        openNewTaskModal();
+                    });
+
+                // アラートモーダル
+                document
+                    .getElementById("alertCancelBtn")
+                    .addEventListener("click", () => {
+                        closeModal("alertModal");
+                        alertCallback = null;
+                    });
+                document
+                    .getElementById("alertConfirmBtn")
+                    .addEventListener("click", () => {
+                        if (alertCallback) {
+                            alertCallback();
+                        }
+                        closeModal("alertModal");
+                        alertCallback = null;
+                    });
+            }
+
+            // モーダル開閉
+            function openModal(modalId) {
+                document.getElementById(modalId).classList.add("active");
+            }
+
+            function closeModal(modalId) {
+                document.getElementById(modalId).classList.remove("active");
+            }
+
+            // 画面切り替え
+            function showScreen(screenName) {
+                // 全画面を非表示
+                document
+                    .getElementById("mainScreen")
+                    .classList.remove("active");
+                document
+                    .getElementById("settingsScreen")
+                    .classList.remove("active");
+
+                // 指定画面を表示
+                if (screenName === "main") {
+                    document.getElementById("mainScreen").style.display =
+                        "flex";
+                    document.getElementById("settingsScreen").style.display =
+                        "none";
+                } else if (screenName === "settings") {
+                    document.getElementById("mainScreen").style.display =
+                        "none";
+                    document.getElementById("settingsScreen").style.display =
+                        "flex";
+                }
+            }
+
+            // アラート表示
+            function showAlert(
+                title,
+                message,
+                confirmText,
+                callback,
+                iconClass = "fas fa-user",
+            ) {
+                document.getElementById("alertTitle").textContent = title;
+                document.getElementById("alertMessage").innerHTML = message;
+                document.getElementById("alertConfirmBtn").textContent =
+                    confirmText;
+                document.getElementById("alertIconContent").className =
+                    iconClass;
+
+                alertCallback = callback;
+                openModal("alertModal");
+            }
+
+            // 他メンバーのタスクかチェック
+            function isOtherMemberTask(task) {
+                return (
+                    task.assignee !== CURRENT_USER &&
+                    task.assignee !== "あなた" &&
+                    task.assignee !== "松田" &&
+                    task.assignee !== "指定なし"
+                );
+            }
+
+            // AI応答を解析
+            function parseTaskResponse(responseText, rawInput) {
+                const taskMatch = responseText.match(/タスク[：:]\s*(.+)/);
+                const dateMatch = responseText.match(/日付[：:]\s*(.+)/);
+                const assigneeMatch = responseText.match(/担当者[：:]\s*(.+)/);
+                const priorityMatch = responseText.match(/優先度[：:]\s*(.+)/);
+
+                return {
+                    id: Date.now(),
+                    rawInput: rawInput || "",
+                    task: taskMatch ? taskMatch[1].trim() : "",
+                    date: dateMatch ? dateMatch[1].trim() : "指定なし",
+                    assignee: assigneeMatch
+                        ? assigneeMatch[1].trim()
+                        : "指定なし",
+                    priority: priorityMatch
+                        ? priorityMatch[1].trim()
+                        : "指定なし",
+                    createdBy: CURRENT_USER,
+                    createdAt: new Date().toISOString(),
+                    completed: false,
+                };
+            }
+
+            // 新規タスクモーダルを開く
+            function openNewTaskModal() {
+                currentTask = {
+                    id: Date.now(),
+                    rawInput: "",
+                    task: "",
+                    date: "指定なし",
+                    assignee: CURRENT_USER,
+                    priority: "指定なし",
+                    createdBy: CURRENT_USER,
+                    createdAt: new Date().toISOString(),
+                    completed: false,
+                };
+
+                document.getElementById("detailTaskTitle").value = "";
+                document.getElementById("detailDate").textContent = "指定なし";
+                document.getElementById("detailAssignee").textContent =
+                    "あなた";
+
+                // 優先度ボタンをリセット
+                document.querySelectorAll(".priority-btn").forEach((btn) => {
+                    btn.classList.remove("active", "high", "medium", "low");
+                });
+
+                openModal("taskDetailModal");
+            }
+
+            // タスク詳細を表示
+            function showTaskDetail(task) {
+                currentTask = task;
+                document.getElementById("detailTaskTitle").value = task.task;
+                document.getElementById("detailDate").textContent = task.date;
+                document.getElementById("detailAssignee").textContent =
+                    task.assignee === CURRENT_USER ||
+                    task.assignee === "松田" ||
+                    task.assignee === "あなた"
+                        ? "あなた"
+                        : task.assignee;
+
+                // 優先度ボタンを設定
+                document.querySelectorAll(".priority-btn").forEach((btn) => {
+                    btn.classList.remove("active", "high", "medium", "low");
+                    if (btn.dataset.priority === task.priority) {
+                        btn.classList.add("active");
+                        if (task.priority === "高") btn.classList.add("high");
+                        if (task.priority === "中") btn.classList.add("medium");
+                        if (task.priority === "低") btn.classList.add("low");
+                    }
+                });
+
+                openModal("taskDetailModal");
+            }
+
+            // タスク保存
+            async function saveTask() {
+                if (!currentTask) return;
+
+                const taskTitle = document
+                    .getElementById("detailTaskTitle")
+                    .value.trim();
+                if (!taskTitle) {
+                    alert("タスク名を入力してください");
+                    return;
+                }
+
+                const saveBtn = document.getElementById("saveTaskBtn");
+                saveBtn.disabled = true;
+                saveBtn.textContent = "解析中...";
+
+                try {
+                    // AI解析を実行
+                    const today = new Date();
+                    const year = today.getFullYear();
+                    const month = today.getMonth() + 1;
+                    const day = today.getDate();
+                    const weekdays = [
+                        "日曜日",
+                        "月曜日",
+                        "火曜日",
+                        "水曜日",
+                        "木曜日",
+                        "金曜日",
+                        "土曜日",
+                    ];
+                    const weekday = weekdays[today.getDay()];
+                    const todayString = `${year}年${month}月${day}日（${weekday}）`;
+
+                    const res = await fetch(
+                        "https://api.openai.com/v1/chat/completions",
+                        {
+                            method: "POST",
+                            headers: {
+                                "Content-Type": "application/json",
+                                Authorization: `Bearer ${API_KEY}`,
+                            },
+                            body: JSON.stringify({
+                                model: "gpt-5",
+                                messages: [
+                                    {
+                                        role: "system",
+                                        content: `あなたはタスク管理の専門家です。
+以下の入力テキストから、タスク管理に必要な情報を抽出してください。
+
+【前提】
+- この入力はログインユーザー本人が行っています
+- 推測や補完は行わず、明示されている情報のみを使用してください
+- 判断できない項目は「指定なし」としてください
+
+【抽出項目】
+
+1. 入力内容
+   - 入力されたテキストをそのまま出力してください
+
+2. タスク
+   - 入力文の中から「やることの内容」を簡潔に抽出してください
+
+3. 日付
+   - 期限や実施日が明示されている場合のみ抽出してください
+   - 緊急度の表現が含まれている場合は日付を「今日」としてください
+   - これらの表現と日付が明示されている場合は、日付を優先してください
+   - 今日は ${todayString} です
+   - 週の定義：月曜日が週の始まり、金曜日が週の終わりです
+   - 「今週中」「来週中」はその週の金曜日を期限としてください
+
+4. 担当者
+   - 以下の候補から選んでください
+   - ASSIGNEE_LIST = [松本, 野中, 白石, 松波, 宮原, 安岡, 松田]
+   - 人名が明示されていない場合、または「自分」「私」「俺」などの表現は「あなた」としてください
+
+5. 優先度
+   - 高・中・低 のいずれかで出力してください
+   - 判断できない場合は「指定なし」としてください
+   - 「なるはや」「至急」「急ぎ」などは優先度「高」としてください
+
+【出力形式】
+以下の形式で出力してください。
+
+入力内容：xxx
+タスク：xxx
+日付：yyyy年mm月dd日 または 指定なし
+担当者：xxx
+優先度：高 / 中 / 低 / 指定なし`,
+                                    },
+                                    { role: "user", content: taskTitle },
+                                ],
+                            }),
+                        },
+                    );
+
+                    const data = await res.json();
+
+                    if (data.error) {
+                        alert(`エラー: ${data.error.message}`);
+                        return;
+                    }
+
+                    // AI応答を解析
+                    const responseText = data.choices[0].message.content;
+                    const parsedTask = parseTaskResponse(
+                        responseText,
+                        taskTitle,
+                    );
+
+                    // 現在のタスクを更新
+                    currentTask.rawInput = taskTitle;
+                    currentTask.task = parsedTask.task;
+                    currentTask.date = parsedTask.date;
+                    currentTask.assignee = parsedTask.assignee;
+                    currentTask.priority = parsedTask.priority;
+
+                    // 手動選択があればそれで上書き
+                    // 日付の手動選択チェック
+                    const manualDate =
+                        document.getElementById("detailDate").textContent;
+                    if (manualDate && manualDate !== "指定なし") {
+                        currentTask.date = manualDate;
+                    }
+
+                    // 優先度の手動選択チェック
+                    const manualPriority = document.querySelector(
+                        ".priority-btn.active",
+                    )?.dataset.priority;
+                    if (manualPriority) {
+                        currentTask.priority = manualPriority;
+                    }
+
+                    // localStorageに保存
+                    const tasks = JSON.parse(
+                        localStorage.getItem("tasks") || "[]",
+                    );
+                    const existingIndex = tasks.findIndex(
+                        (t) => t.id === currentTask.id,
+                    );
+
+                    if (existingIndex >= 0) {
+                        tasks[existingIndex] = currentTask;
+                    } else {
+                        tasks.push(currentTask);
+                    }
+
+                    localStorage.setItem("tasks", JSON.stringify(tasks));
+
+                    closeModal("taskDetailModal");
+                    loadTasks();
+                } catch (error) {
+                    alert("エラー: " + error.message);
+                } finally {
+                    saveBtn.disabled = false;
+                    saveBtn.textContent = "保存";
+                }
+            }
+
+            // タスク削除
+            function deleteTask() {
+                if (!currentTask) return;
+
+                // 他メンバーのタスクの場合はアラート表示
+                if (isOtherMemberTask(currentTask)) {
+                    const assigneeName = currentTask.assignee;
+                    showAlert(
+                        "他メンバーのタスクです",
+                        `このタスクは<strong>${assigneeName}</strong>さんに割り当てられています。削除してもよろしいですか？`,
+                        "削除する",
+                        () => executeDeleteTask(),
+                        "fas fa-trash",
+                    );
+                    return;
+                }
+
+                // 自分のタスクの場合は通常の確認ダイアログ
+                if (confirm("このタスクを削除しますか？")) {
+                    executeDeleteTask();
+                }
+            }
+
+            // タスク削除実行
+            function executeDeleteTask() {
+                if (!currentTask) return;
+
+                const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+                const filteredTasks = tasks.filter(
+                    (t) => t.id !== currentTask.id,
+                );
+                localStorage.setItem("tasks", JSON.stringify(filteredTasks));
+
+                closeModal("taskDetailModal");
+                loadTasks();
+            }
+
+            // タスク完了
+            function completeTask() {
+                if (!currentTask) return;
+
+                // 他メンバーのタスクの場合はアラート表示
+                if (isOtherMemberTask(currentTask)) {
+                    const assigneeName = currentTask.assignee;
+                    showAlert(
+                        "他メンバーのタスクです",
+                        `このタスクは<strong>${assigneeName}</strong>さんに割り当てられています。完了にしてもよろしいですか？`,
+                        "完了にする",
+                        () => executeCompleteTask(),
+                        "fas fa-user",
+                    );
+                    return;
+                }
+
+                executeCompleteTask();
+            }
+
+            // タスク完了実行
+            function executeCompleteTask() {
+                if (!currentTask) return;
+
+                // 完了情報を追加
+                currentTask.completed = true;
+                currentTask.completedAt = new Date().toISOString();
+                currentTask.completedBy = CURRENT_USER;
+
+                // localStorageを更新
+                const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+                const taskIndex = tasks.findIndex(
+                    (t) => t.id === currentTask.id,
+                );
+
+                if (taskIndex >= 0) {
+                    tasks[taskIndex] = currentTask;
+                    localStorage.setItem("tasks", JSON.stringify(tasks));
+                }
+
+                closeModal("taskDetailModal");
+                loadTasks();
+            }
+
+            // タスク一覧を読み込み
+            function loadTasks() {
+                const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+                const container = document.getElementById("taskListContainer");
+
+                if (tasks.length === 0) {
+                    container.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-clipboard-list"></i>
+            <p>タスクがありません</p>
+          </div>
+        `;
+                    return;
+                }
+
+                // 自分のタスクのみ表示（デフォルトフィルター）
+                const filteredTasks = tasks.filter(
+                    (t) =>
+                        !t.completed &&
+                        (t.assignee === CURRENT_USER ||
+                            t.assignee === "あなた" ||
+                            t.assignee === "松田" ||
+                            t.assignee === "指定なし"),
+                );
+
+                renderTaskList(filteredTasks, container, false);
+            }
+
+            // タスク編集
+            function editTask(taskId) {
+                const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+                const task = tasks.find((t) => t.id === taskId);
+                if (task) {
+                    showTaskDetail(task);
+                }
+            }
+
+            // 優先度クラス取得
+            function getPriorityClass(priority) {
+                if (priority === "高") return "priority-high";
+                if (priority === "中") return "priority-medium";
+                return "";
+            }
+
+            // タスクフィルター
+            function filterTasks(filter) {
+                const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
+                const container = document.getElementById("taskListContainer");
+
+                let filteredTasks = [];
+
+                switch (filter) {
+                    case "self":
+                        filteredTasks = tasks.filter(
+                            (t) =>
+                                !t.completed &&
+                                (t.assignee === CURRENT_USER ||
+                                    t.assignee === "あなた" ||
+                                    t.assignee === "松田" ||
+                                    t.assignee === "指定なし"),
+                        );
+                        renderTaskList(filteredTasks, container, false);
+                        break;
+                    case "member":
+                        filteredTasks = tasks.filter(
+                            (t) =>
+                                !t.completed &&
+                                t.assignee !== CURRENT_USER &&
+                                t.assignee !== "あなた" &&
+                                t.assignee !== "松田" &&
+                                t.assignee !== "指定なし",
+                        );
+                        renderTaskList(filteredTasks, container, false);
+                        break;
+                    case "unassigned":
+                        filteredTasks = tasks.filter(
+                            (t) =>
+                                !t.completed &&
+                                (t.assignee === "指定なし" ||
+                                    t.priority === "指定なし"),
+                        );
+                        renderUnassignedTasks(filteredTasks, container);
+                        break;
+                    case "completed":
+                        filteredTasks = tasks.filter((t) => t.completed);
+                        renderCompletedTasks(filteredTasks, container);
+                        break;
+                }
+            }
+
+            // 通常のタスクリスト表示
+            function renderTaskList(tasks, container, isCompleted = false) {
+                if (tasks.length === 0) {
+                    container.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-clipboard-list"></i>
+              <p>タスクがありません</p>
+            </div>
+          `;
+                    return;
+                }
+
+                container.innerHTML = tasks
+                    .reverse()
+                    .map((task) => renderTaskItem(task, isCompleted))
+                    .join("");
+            }
+
+            // タスクアイテムのHTML生成
+            function renderTaskItem(task, isCompleted = false) {
+                const completedClass = isCompleted ? "completed-task" : "";
+                const checkboxContent = isCompleted
+                    ? '<i class="fas fa-check"></i>'
+                    : "";
+
+                return `
+          <div class="task-item ${completedClass}" onclick="editTask(${task.id})">
+            ${isCompleted ? renderCompletedInfo(task, checkboxContent, getPriorityClass(task.priority)) : ""}
+            <div class="task-item-top">
+              ${!isCompleted ? `<div class="task-checkbox ${getPriorityClass(task.priority)}">${checkboxContent}</div>` : ""}
+              <div class="task-title">${task.task}</div>
+            </div>
+
+            <div class="task-meta">
+              <div class="task-meta-item">
+                <i class="far fa-calendar"></i>
+                <span>${task.date}</span>
+              </div>
+              <div class="task-meta-item">
+                <i class="far fa-user"></i>
+                <span>${task.assignee === CURRENT_USER || task.assignee === "松田" || task.assignee === "あなた" ? "あなた" : task.assignee}</span>
+              </div>
+              <div class="task-meta-item ${getPriorityClass(task.priority)}">
+                <i class="fas fa-flag"></i>
+                <span>${task.priority}</span>
+              </div>
+            </div>
+
+          </div>
+        `;
+            }
+
+            // 完了情報の表示
+            function renderCompletedInfo(task, checkboxContent, priorityClass) {
+                if (!task.completedAt) return "";
+
+                const completedDate = new Date(task.completedAt);
+                const timeString = completedDate.toLocaleTimeString("ja-JP", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                });
+
+                const completedByName =
+                    task.completedBy === CURRENT_USER
+                        ? "あなた"
+                        : task.completedBy;
+
+                return `
+          <div class="completed-info">
+            <div class="task-checkbox ${priorityClass}">${checkboxContent}</div>
+            <span class="completed-time">${timeString}</span>
+            <span class="completed-by"><strong class="completed-by-name">${completedByName}</strong>がタスクを完了しました</span>
+          </div>
+        `;
+            }
+
+            // 未割当タスクのグループ表示
+            function renderUnassignedTasks(tasks, container) {
+                if (tasks.length === 0) {
+                    container.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-clipboard-list"></i>
+              <p>未割当のタスクがありません</p>
+            </div>
+          `;
+                    return;
+                }
+
+                // 担当者なしと優先度なしでグループ分け
+                const noAssignee = tasks.filter(
+                    (t) => t.assignee === "指定なし",
+                );
+                const noPriority = tasks.filter(
+                    (t) =>
+                        t.priority === "指定なし" && t.assignee !== "指定なし",
+                );
+
+                let html = "";
+
+                if (noAssignee.length > 0) {
+                    html += `
+            <div class="task-group">
+              <div class="task-group-header">
+                <span class="task-group-title">担当者なし</span>
+                <span class="task-group-count">${noAssignee.length}</span>
+              </div>
+              <div class="task-group-items">
+                ${noAssignee.map((task) => renderTaskItem(task)).join("")}
+              </div>
+            </div>
+          `;
+                }
+
+                if (noPriority.length > 0) {
+                    html += `
+            <div class="task-group">
+              <div class="task-group-header">
+                <span class="task-group-title">優先度なし</span>
+                <span class="task-group-count">${noPriority.length}</span>
+              </div>
+              <div class="task-group-items">
+                ${noPriority.map((task) => renderTaskItem(task)).join("")}
+              </div>
+            </div>
+          `;
+                }
+
+                container.innerHTML = html;
+            }
+
+            // 完了済みタスクの日付別グループ表示
+            function renderCompletedTasks(tasks, container) {
+                if (tasks.length === 0) {
+                    container.innerHTML = `
+            <div class="empty-state">
+              <i class="fas fa-clipboard-list"></i>
+              <p>完了済みのタスクがありません</p>
+            </div>
+          `;
+                    return;
+                }
+
+                // 日付別にグループ分け
+                const groupedTasks = groupTasksByCompletedDate(tasks);
+
+                let html = "";
+                Object.keys(groupedTasks).forEach((dateKey) => {
+                    const tasksInGroup = groupedTasks[dateKey];
+                    html += `
+            <div class="task-group">
+              <div class="task-group-header">
+                <span class="task-group-title">${dateKey}</span>
+                <span class="task-group-count">${tasksInGroup.length}</span>
+              </div>
+              <div class="task-group-items">
+                ${tasksInGroup.map((task) => renderTaskItem(task, true)).join("")}
+              </div>
+            </div>
+          `;
+                });
+
+                container.innerHTML = html;
+            }
+
+            // 完了日時でタスクをグループ分け
+            function groupTasksByCompletedDate(tasks) {
+                const today = new Date();
+                const tomorrow = new Date(today);
+                tomorrow.setDate(today.getDate() + 1);
+
+                const groups = {};
+
+                tasks.forEach((task) => {
+                    if (!task.completedAt) return;
+
+                    const completedDate = new Date(task.completedAt);
+                    const dateKey = getDateGroupKey(
+                        completedDate,
+                        today,
+                        tomorrow,
+                    );
+
+                    if (!groups[dateKey]) {
+                        groups[dateKey] = [];
+                    }
+                    groups[dateKey].push(task);
+                });
+
+                // 日付順でソート
+                Object.keys(groups).forEach((key) => {
+                    groups[key].sort(
+                        (a, b) =>
+                            new Date(b.completedAt) - new Date(a.completedAt),
+                    );
+                });
+
+                return groups;
+            }
+
+            // 日付グループのキーを取得
+            function getDateGroupKey(date, today, tomorrow) {
+                const dateStr = date.toDateString();
+                const todayStr = today.toDateString();
+                const tomorrowStr = tomorrow.toDateString();
+
+                if (dateStr === todayStr) {
+                    return "今日";
+                } else if (dateStr === tomorrowStr) {
+                    return "明日";
+                } else {
+                    return `${date.getMonth() + 1}月${date.getDate()}日`;
+                }
+            }
+
+            // メンバー選択モーダルを開く
+            function openMemberSelect() {
+                renderMemberList();
+                openModal("memberSelectModal");
+            }
+
+            // メンバーリストを描画
+            function renderMemberList() {
+                const memberList = document.getElementById("memberList");
+                memberList.innerHTML = MEMBERS.map(
+                    (member) => `
+        <div class="member-item" onclick="selectMember(${member.id})">
+          <div class="member-avatar">${member.name.charAt(0)}</div>
+          <div class="member-name">${member.name}</div>
+          <div class="member-check ${selectedMember === member.id ? "selected" : ""}">
+            ${selectedMember === member.id ? '<i class="fas fa-check"></i>' : ""}
+          </div>
+        </div>
+      `,
+                ).join("");
+            }
+
+            // メンバー選択
+            function selectMember(memberId) {
+                selectedMember = memberId;
+                renderMemberList();
+            }
+
+            // メンバー適用
+            function applyMember() {
+                if (selectedMember) {
+                    const member = MEMBERS.find((m) => m.id === selectedMember);
+                    if (member) {
+                        document.getElementById("detailAssignee").textContent =
+                            member.name;
+                    }
+                }
+                closeModal("memberSelectModal");
+            }
+
+            // 日付選択モーダルを開く
+            function openDateSelectModal() {
+                const today = new Date();
+                selectedDate = today;
+                currentYear = today.getFullYear();
+                currentMonth = today.getMonth();
+
+                renderCalendar();
+                openModal("dateSelectModal");
+            }
+
+            // カレンダーを描画
+            function renderCalendar() {
+                const firstDay = new Date(currentYear, currentMonth, 1);
+                const lastDay = new Date(currentYear, currentMonth + 1, 0);
+                const prevLastDay = new Date(currentYear, currentMonth, 0);
+
+                const firstDayOfWeek = firstDay.getDay();
+                const lastDate = lastDay.getDate();
+                const prevLastDate = prevLastDay.getDate();
+
+                // 月表示を更新
+                const monthNames = [
+                    "1月",
+                    "2月",
+                    "3月",
+                    "4月",
+                    "5月",
+                    "6月",
+                    "7月",
+                    "8月",
+                    "9月",
+                    "10月",
+                    "11月",
+                    "12月",
+                ];
+                document.getElementById("currentMonth").textContent =
+                    `${currentYear}年 ${monthNames[currentMonth]}`;
+
+                const calendarGrid = document.getElementById("calendarGrid");
+                calendarGrid.innerHTML = "";
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                // 前月の日付
+                for (let i = firstDayOfWeek - 1; i >= 0; i--) {
+                    const day = prevLastDate - i;
+                    const date = new Date(currentYear, currentMonth - 1, day);
+                    calendarGrid.innerHTML += createDayCell(day, date, true);
+                }
+
+                // 当月の日付
+                for (let day = 1; day <= lastDate; day++) {
+                    const date = new Date(currentYear, currentMonth, day);
+                    calendarGrid.innerHTML += createDayCell(day, date, false);
+                }
+
+                // 次月の日付
+                const remainingCells = 42 - (firstDayOfWeek + lastDate);
+                for (let day = 1; day <= remainingCells; day++) {
+                    const date = new Date(currentYear, currentMonth + 1, day);
+                    calendarGrid.innerHTML += createDayCell(day, date, true);
+                }
+
+                // 日付クリックイベントを追加
+                document
+                    .querySelectorAll(".calendar-day")
+                    .forEach((dayElement) => {
+                        dayElement.addEventListener("click", function () {
+                            const dateStr = this.dataset.date;
+                            selectedDate = new Date(dateStr);
+                            renderCalendar();
+                        });
+                    });
+            }
+
+            // 日付セルを作成
+            function createDayCell(day, date, isOtherMonth) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                date.setHours(0, 0, 0, 0);
+
+                const isToday = date.getTime() === today.getTime();
+                const isSelected =
+                    selectedDate && date.getTime() === selectedDate.getTime();
+                const dayOfWeek = date.getDay();
+
+                let classes = ["calendar-day"];
+                if (isOtherMonth) classes.push("other-month");
+                if (isToday) classes.push("today");
+                if (isSelected) classes.push("selected");
+                if (dayOfWeek === 0) classes.push("sunday");
+                if (dayOfWeek === 6) classes.push("saturday");
+
+                return `<div class="${classes.join(" ")}" data-date="${date.toISOString()}">${day}</div>`;
+            }
+
+            // ショートカット選択
+            function selectShortcut(type) {
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                switch (type) {
+                    case "today":
+                        selectedDate = today;
+                        break;
+                    case "tomorrow":
+                        selectedDate = new Date(today);
+                        selectedDate.setDate(today.getDate() + 1);
+                        break;
+                    case "weekend":
+                        // 次の土曜日
+                        selectedDate = new Date(today);
+                        const daysUntilSaturday =
+                            (6 - today.getDay() + 7) % 7 || 7;
+                        selectedDate.setDate(
+                            today.getDate() + daysUntilSaturday,
+                        );
+                        break;
+                    case "nextWeek":
+                        // 来週の月曜日
+                        selectedDate = new Date(today);
+                        const daysUntilNextMonday =
+                            (8 - today.getDay()) % 7 || 7;
+                        selectedDate.setDate(
+                            today.getDate() + daysUntilNextMonday,
+                        );
+                        break;
+                }
+
+                currentYear = selectedDate.getFullYear();
+                currentMonth = selectedDate.getMonth();
+                renderCalendar();
+            }
+
+            // 月を変更
+            function changeMonth(delta) {
+                currentMonth += delta;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                } else if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                renderCalendar();
+            }
+
+            // 日付選択を保存
+            function saveDateSelection() {
+                if (selectedDate) {
+                    const year = selectedDate.getFullYear();
+                    const month = selectedDate.getMonth() + 1;
+                    const day = selectedDate.getDate();
+                    const formatted = `${year}年${month}月${day}日`;
+
+                    document.getElementById("detailDate").textContent =
+                        formatted;
+                }
+                closeModal("dateSelectModal");
+            }
+
+            // 日付選択をクリア
+            function clearDateSelection() {
+                selectedDate = null;
+                document.getElementById("detailDate").textContent = "指定なし";
+                closeModal("dateSelectModal");
+            }
+        </script>
+    </body>
+</html>
