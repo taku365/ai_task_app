@@ -97,3 +97,11 @@ CREATE TABLE ai_tasks_T_tasks (
     FOREIGN KEY (created_by_id) REFERENCES ai_tasks_M_users(id),
     FOREIGN KEY (completed_by_id) REFERENCES ai_tasks_M_users(id)
 );
+
+
+### 進捗状況
+コマンドからのテーブル作成を完了した
+マイグレーションファイルは作成していない
+
+ai_tasks_M_users テーブルにデータを投入しようと思っているところ
+- テストがしやすいため
