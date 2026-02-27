@@ -21,6 +21,7 @@ class Task extends Model
         'due_date',
         'assignee_id',
         'priority_id',
+        'created_by_id',
     ];
 
     // リレーション:テーブル同士の関係を表すもの

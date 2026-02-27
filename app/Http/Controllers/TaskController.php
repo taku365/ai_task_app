@@ -5,11 +5,20 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
 
+use App\Models\Task;
+use App\Models\User;
+use App\Models\Priority;
+
 class TaskController extends Controller
 {
+    // タスク一覧表示
     public function index()
     {
-        $tasks = [];
+        // with()はリレーションを事前に読み込むことでN+1問題を防ぐ
+        // orderBy()は作成日時の降順で並び替える
+        // get()は実際にデータベースからデータを取得する
+        $tasks = Task::with(['assignee', 'priority', 'createdBy'])->orderBy('created_at', 'desc')->get();
+        // $tasks変数をビューで使えるようにする
         return view('tasks.index', compact('tasks'));
     }
 
