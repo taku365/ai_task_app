@@ -13,8 +13,8 @@ return new class extends Migration
             $table->text('input_text');                             // TEXT NOT NULL
             $table->string('ai_task', 500);                         // VARCHAR(500) NOT NULL
             $table->dateTime('due_date')->nullable();               // DATETIME NULL
-            $table->unsignedBigInteger('assignee_id');              // BIGINT UNSIGNED NOT NULL
-            $table->unsignedTinyInteger('priority_id')->default(0); // TINYINT UNSIGNED NOT NULL DEFAULT 0
+            $table->unsignedBigInteger('assignee_id')->nullable(); // BIGINT UNSIGNED NULL
+            $table->unsignedTinyInteger('priority_id')->nullable()->default(0); // TINYINT UNSIGNED NULL DEFAULT 0
             $table->unsignedBigInteger('created_by_id');            // BIGINT UNSIGNED NOT NULL
             $table->boolean('completed_flg')->default(false);       // TINYINT(1) NOT NULL DEFAULT 0
             $table->dateTime('completed_at')->nullable();           // DATETIME NULL

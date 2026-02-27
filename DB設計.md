@@ -6,8 +6,8 @@
 | 2  | input_text      | TEXT                | NO       | -                                             | ユーザー元入力           |
 | 3  | ai_task         | VARCHAR(500)        | NO       | -                                             | AI解析結果               |
 | 4  | due_date        | DATETIME            | YES      | NULL                                          | 期限日時                 |
-| 5  | assignee_id     | BIGINT UNSIGNED     | NO       | -                                             | 担当者ID                 |
-| 6  | priority_id     | TINYINT UNSIGNED    | NO       | 0                                             | 優先度ID                 |
+| 5  | assignee_id     | BIGINT UNSIGNED     | YES      | NULL                                          | 担当者ID                 |
+| 6  | priority_id     | TINYINT UNSIGNED    | YES      | 0                                             | 優先度ID                 |
 | 7  | created_by_id   | BIGINT UNSIGNED     | NO       | -                                             | 作成者ID                 |
 | 8  | completed_flg   | TINYINT(1)          | NO       | 0                                             | 完了フラグ               |
 | 9  | completed_at    | DATETIME            | YES      | NULL                                          | 完了日時                 |
