@@ -19,7 +19,8 @@ class DatabaseSeeder extends Seeder
         // ★PrioritySeeder クラスを実行する
         // （Laravel が内部でインスタンスを生成し、run() を呼び出す）
         $this->call([
-            PrioritySeeder::class,
+            PrioritySeeder::class,  // 優先度マスターデータ（必須）
+            DevSeeder::class,       // 開発用テストデータ
         ]);
     }
 }
