@@ -4,12 +4,13 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Task extends Model
 {
     // 論理削除(deleted_atカラム)を使用するためのミックスイン
     // 論理削除:データを物理的に削除せずに、削除フラグを立てることでデータを保持する方法
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     // テーブル名を指定
     protected $table = 'ai_tasks_T_tasks';
