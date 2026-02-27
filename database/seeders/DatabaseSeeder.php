@@ -10,16 +10,16 @@ class DatabaseSeeder extends Seeder
 {
     use WithoutModelEvents;
 
-    /**
-     * Seed the application's database.
-     */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // $this は DatabaseSeeder クラスのインスタンス
+        // call() は Seeder クラスが持っているメソッド
+        // call() は 指定した Seeder クラスの run() を実行する命令
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // ★PrioritySeeder クラスを実行する
+        // （Laravel が内部でインスタンスを生成し、run() を呼び出す）
+        $this->call([
+            PrioritySeeder::class,
         ]);
     }
 }
