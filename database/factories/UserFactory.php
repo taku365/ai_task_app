@@ -6,39 +6,28 @@ use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
-/**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\User>
- */
+// テスト用のダミーデータを作るクラス
 class UserFactory extends Factory
 {
-    /**
-     * The current password being used by the factory.
-     */
+    // 1回だけハッシュ化して、全ユーザーで共有する
     protected static ?string $password;
 
-    /**
-     * Define the model's default state.
-     *
-     * @return array<string, mixed>
-     */
     public function definition(): array
     {
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
-            'email_verified_at' => now(),
-            'password' => static::$password ??= Hash::make('password'),
-            'remember_token' => Str::random(10),
+            'password' => static::$password ??= Hash::make('password123'),
+            'active_flg' => true,
         ];
     }
 
-    /**
-     * Indicate that the model's email address should be unverified.
-     */
-    public function unverified(): static
+    // definition()メソッドをオーバーライドして、テスト用のダミーデータを作る
+    public function testUser(): static
     {
-        return $this->state(fn (array $attributes) => [
-            'email_verified_at' => null,
+        return $this->state(fn(array $attributes) => [
+            'name' => 'テストユーザー',
+            'email' => 'test@example.com',
         ]);
     }
 }
