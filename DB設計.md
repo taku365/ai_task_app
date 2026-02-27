@@ -43,7 +43,7 @@
 | 1  | id           | TINYINT UNSIGNED | NO       | -            | 主キー                        |
 | 2  | name         | VARCHAR(20)      | NO       | -            | 優先度名                      |
 | 3  | level        | TINYINT          | NO       | -            | 優先度レベル                  |
-| 4  | color        | VARCHAR(7)       | YES      | NULL         | 表示色（例: `#FF0000`形式）   |
+| 4  | color        | VARCHAR(7)       | NO       | -            | 表示色（例: `#FF0000`形式）   |
 
 <br>
 
