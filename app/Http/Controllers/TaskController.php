@@ -11,15 +11,55 @@ use App\Models\Priority;
 
 class TaskController extends Controller
 {
-    // タスク一覧表示
-    public function index()
+    // タスク表示
+    public function index(Request $request)
     {
+        // ログインユーザー（現時点では固定ユーザー）を取得
+        $currentUser = User::where('email', 'matsuda@example.com')->first();
+
+        // URLのクエリパラメータ 'filter' を取得する。もし存在しなければ 'self' を使う
+        $filter = $request->query('filter', 'self');
+
         // with()はリレーションを事前に読み込むことでN+1問題を防ぐ
         // orderBy()は作成日時の降順で並び替える
-        // get()は実際にデータベースからデータを取得する
-        $tasks = Task::with(['assignee', 'priority', 'createdBy'])->orderBy('created_at', 'desc')->get();
-        // $tasks変数をビューで使えるようにする
-        return view('tasks.index', compact('tasks'));
+        $query = Task::with(['assignee', 'priority', 'createdBy'])->orderBy('created_at', 'desc');
+
+        switch ($filter) {
+            case 'self':
+                // 自分担当のタスク（未完了）
+                // WHERE assignee_id = 1 AND completed_at IS NULL
+                $query->where('assignee_id', $currentUser->id)
+                    ->whereNull('completed_at');
+                break;
+
+            case 'member':
+                // 他メンバー担当のタスク（未完了）
+                $query->where('assignee_id', '!=', $currentUser->id)
+                    ->whereNotNull('assignee_id')
+                    ->whereNull('completed_at');
+                break;
+
+            case 'unassigned':
+                // 未割当タスク（担当者なし、優先度なし、期限ないしのいずれか）
+                // OR条件を1つのグループにするためクロージャ(無名関数)を使用
+                $query->where(function ($q) {
+                    $q->whereNull('assignee_id')
+                        ->orWhereNull('priority_id')
+                        ->orWhereNull('due_date');
+                })->whereNull('completed_at');
+                break;
+
+            case 'completed':
+                // 完了済みタスク
+                $query->whereNotNull('completed_at');
+                break;
+        }
+
+        // get()で DB からデータを取得する
+        $tasks = $query->get();
+
+        // compact()で変数を連想配列に変換してviewにわたす
+        return view('tasks.index', compact('tasks', 'currentUser', 'filter'));
     }
 
     public function settings()
