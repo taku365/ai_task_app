@@ -57,6 +57,24 @@ function showErrorMessage(message) {
     </div>`;
 }
 
+//  Laravel APIから返されたDB形式のタスクをフロントエンド形式に変換する関数
+function transformTaskData(dbTask) {
+    return {
+        id: dbTask.id,
+        task: dbTask.ai_task,
+        rawInput: dbTask.input_text,
+        date: formatDate(dbTask.due_date),
+        assignee: dbTask.assignee?.name || '指定なし',
+        priority: dbTask.priority?.name || '指定なし',
+        priorityCode: dbTask.priority?.code || 'none',
+        completed: dbTask.completed_at !== null,
+        completedAt: dbTask.completed_at,
+        completedBy: dbTask.completed_by?.name,
+        createdBy: dbTask.created_by?.name,
+        createdAt: dbTask.created_at
+    };
+}
+
 // 初期化
 // ページのHTMLが全部読み込まれたら、setupEventListeners() を実行する
 document.addEventListener("DOMContentLoaded", () => {
@@ -545,11 +563,17 @@ async function filterTasks(filter) {
     try {
         const response = await fetch(`/api/tasks?filter=${filter}`);
 
+        // HTTP的に成功か確認
+        console.log('status:', response.status);
+
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
         const data = await response.json();
+        console.log('data:', data); // APIレスポンス全体を確認
+        console.log('tasks:', data.tasks); // tasksのみを確認
+
         renderTaskList(data.tasks, filter);
     } catch (error) {
         console.error('タスクの取得に失敗しました:', error);
