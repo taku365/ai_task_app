@@ -37,6 +37,15 @@ function formatDate(dateString) {
     return `${year}年${month}月${day}日`;
 }
 
+// XSS対策用のHTMLエスケープ関数
+// ユーザー入力などの文字列を textContent にセットすることで
+// <script> 等のタグをHTMLエンティティに変換し、安全に innerHTML へ挿入できるようにする
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
 // 初期化
 // ページのHTMLが全部読み込まれたら、setupEventListeners() を実行する
 document.addEventListener("DOMContentLoaded", () => {
