@@ -298,35 +298,6 @@ function showTaskDetail(task) {
     openModal("taskDetailModal");
 }
 
-// タスク保存（AI解析なし - 一時的）
-function saveTaskWithoutAI() {
-    if (!currentTask) return;
-
-    const taskTitle = document.getElementById("detailTaskTitle").value.trim();
-    if (!taskTitle) {
-        alert("タスク名を入力してください");
-        return;
-    }
-
-    currentTask.task = taskTitle;
-    currentTask.rawInput = taskTitle;
-
-    // localStorageに保存
-    const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-    const existingIndex = tasks.findIndex((t) => t.id === currentTask.id);
-
-    if (existingIndex >= 0) {
-        tasks[existingIndex] = currentTask;
-    } else {
-        tasks.push(currentTask);
-    }
-
-    localStorage.setItem("tasks", JSON.stringify(tasks));
-
-    closeModal("taskDetailModal");
-    loadTasks();
-}
-
 // タスク保存（AI解析あり）
 async function saveTask() {
     if (!currentTask) return;
@@ -537,70 +508,43 @@ function getPriorityClass(priority) {
     return "";
 }
 
-// タスクフィルター
-function filterTasks(filter) {
-    const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-    const container = document.getElementById("taskListContainer");
+// JSON API方式でフィルタリングしたタスクを取得して表示する
+async function filterTasks(filter) {
+    try {
+        const response = await fetch(`/api/tasks?filter=${filter}`);
 
-    if (!container) return;
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
 
-    let filteredTasks = [];
-
-    switch (filter) {
-        case "self":
-            filteredTasks = tasks.filter(
-                (t) =>
-                    !t.completed &&
-                    (t.assignee === CURRENT_USER ||
-                        t.assignee === "あなた" ||
-                        t.assignee === "松田" ||
-                        t.assignee === "指定なし")
-            );
-            renderTaskList(filteredTasks, container, false);
-            break;
-        case "member":
-            filteredTasks = tasks.filter(
-                (t) =>
-                    !t.completed &&
-                    t.assignee !== CURRENT_USER &&
-                    t.assignee !== "あなた" &&
-                    t.assignee !== "松田" &&
-                    t.assignee !== "指定なし"
-            );
-            renderTaskList(filteredTasks, container, false);
-            break;
-        case "unassigned":
-            filteredTasks = tasks.filter(
-                (t) =>
-                    !t.completed &&
-                    (t.assignee === "指定なし" || t.priority === "指定なし")
-            );
-            renderUnassignedTasks(filteredTasks, container);
-            break;
-        case "completed":
-            filteredTasks = tasks.filter((t) => t.completed);
-            renderCompletedTasks(filteredTasks, container);
-            break;
+        const data = await response.json();
+        renderTaskList(data.tasks, filter);
+    } catch (error) {
+        console.error('タスクの取得に失敗しました:', error);
+        showErrorMessage('タスクの読み込みに失敗しました');
     }
 }
 
-// 通常のタスクリスト表示
-function renderTaskList(tasks, container, isCompleted = false) {
+function renderTaskList(tasks, filter) {
+    const container = document.getElementById('taskListContainer');
+
     if (tasks.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-clipboard-list"></i>
-                <p>タスクがありません</p>
-            </div>
-        `;
+        container.innerHTML = '<div class="empty-state">タスクがありません</div>';
         return;
     }
 
-    container.innerHTML = tasks
-        .reverse()
-        .map((task) => renderTaskItem(task, isCompleted))
-        .join("");
+    container.innerHTML = tasks.map(task => `
+        <div class="task-item" onclick="editTask(${task.id})">
+            <div class="task-title">${task.ai_task}</div>
+            <div class="task-meta">
+                <span>${task.assignee?.name || '未割当'}</span>
+                <span>${task.priority?.name || '指定なし'}</span>
+                <span>${task.due_date || '期限なし'}</span>
+            </div>
+        </div>
+    `).join('');
 }
+
 
 // タスクアイテムのHTML生成
 function renderTaskItem(task, isCompleted = false) {
