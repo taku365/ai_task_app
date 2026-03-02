@@ -24,10 +24,67 @@
 
         <!-- タスクリスト -->
         <div class="task-list-container" id="taskListContainer">
-            <div class="empty-state">
-                <i class="fas fa-clipboard-list"></i>
-                <p>タスクがありません</p>
-            </div>
+            {{-- $tasks が空かどうかを判定 --}}
+            @if ($tasks->isEmpty())
+                {{-- タスクが1件もない場合の表示 --}}
+                <div class="empty-state">
+                    <i class="fas fa-clipboard-list"></i>
+                    <p>タスクがありません</p>
+                </div>
+            @else
+                {{-- $tasks（コレクション）から1件ずつ $task として取り出す --}}
+                @foreach ($tasks as $task)
+                    {{-- 1つのタスク全体のコンテナクリックすると editTask(タスクID) をJSに渡す --}}
+                    <div class="task-item" onclick="editTask({{ $task->id }})">
+                        <div class="task-item-top">
+                            {{-- 優先度があればclass="priority-優先度名" を追加（例: priority-high） --}}
+                            <div
+                                class="task-checkbox {{ $task->priority ? 'priority-' . strtolower($task->priority->name) : '' }}">
+                            </div>
+                            {{-- タスクのタイトル（ai_taskカラム）を表示 --}}
+                            <div class="task-title">
+                                {{ $task->ai_task }}
+                            </div>
+                        </div>
+                        <div class="task-meta">
+                            {{-- 期限表示エリア --}}
+                            <div class="task-meta-item">
+                                <i class="far fa-calendar"></i>
+                                {{-- 期限があれば日付フォーマットして表示なければ「指定なし」 --}}
+                                <span>
+                                    {{ $task->due_date ? \Carbon\Carbon::parse($task->due_date)->format('Y年n月j日') : '指定なし' }}
+                                </span>
+                            </div>
+
+                            {{-- 担当者表示エリア --}}
+                            <div class="task-meta-item">
+                                <i class="far fa-user"></i>
+                                <span>
+                                    {{-- 担当者が存在する場合 --}}
+                                    @if ($task->assignee)
+                                        {{-- 担当者がログインユーザーなら「あなた」表示、そうでなければ担当者名表示 --}}
+                                        {{ $task->assignee->id === $currentUser->id ? 'あなた' : $task->assignee->name }}
+                                    @else
+                                        {{-- 担当者がいない場合 --}}
+                                        未割当
+                                    @endif
+                                </span>
+                            </div>
+
+                            {{-- 優先度表示エリア --}}
+                            {{-- 優先度に応じたCSSクラスを追加 --}}
+                            <div
+                                class="task-meta-item {{ $task->priority ? 'priority-' . strtolower($task->priority->name) : '' }}">
+                                <i class="fas fa-flag"></i>
+                                {{-- 優先度名があれば表示なければ「指定なし」 --}}
+                                <span>
+                                    {{ $task->priority->name ?? '指定なし' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                @endforeach
+            @endif
         </div>
 
         <!-- 音声入力ボタン -->

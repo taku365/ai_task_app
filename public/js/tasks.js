@@ -26,8 +26,8 @@ let currentMonth = new Date().getMonth();
 let alertCallback = null;
 
 // 初期化
+// ページのHTMLが全部読み込まれたら、setupEventListeners() を実行する
 document.addEventListener("DOMContentLoaded", () => {
-    loadTasks();
     setupEventListeners();
 });
 
