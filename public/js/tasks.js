@@ -66,7 +66,7 @@ function transformTaskData(dbTask) {
     return {
         id: dbTask.id,
         task: dbTask.ai_task,
-        rawInput: dbTask.input_text,
+        textInput: dbTask.text_input,
         date: formatDate(dbTask.due_date),
         assignee: dbTask.assignee?.name || '指定なし',
         priority: dbTask.priority?.name || '指定なし',
@@ -174,7 +174,7 @@ function setupEventListeners() {
         });
     });
 
-    // タスク保存
+    // タスク保存ボタン
     const saveTaskBtn = document.getElementById("saveTaskBtn");
     if (saveTaskBtn) {
         saveTaskBtn.addEventListener("click", saveTask);
@@ -312,7 +312,7 @@ function isOtherMemberTask(task) {
 function openNewTaskModal() {
     currentTask = {
         id: Date.now(),
-        rawInput: "",
+        textInput: "",
         task: "",
         date: "指定なし",
         assignee: CURRENT_USER,
@@ -322,7 +322,7 @@ function openNewTaskModal() {
         completed: false,
     };
 
-    document.getElementById("detailTaskTitle").value = "";
+    document.getElementById("textInputField").value = "";
     document.getElementById("detailDate").textContent = "指定なし";
     document.getElementById("detailAssignee").textContent = "あなた";
 
@@ -337,7 +337,7 @@ function openNewTaskModal() {
 // タスク詳細を表示
 function showTaskDetail(task) {
     currentTask = task;
-    document.getElementById("detailTaskTitle").value = task.task;
+    document.getElementById("textInputField").value = task.task;
     document.getElementById("detailDate").textContent = task.date;
     document.getElementById("detailAssignee").textContent =
         task.assignee === CURRENT_USER ||
@@ -364,8 +364,8 @@ function showTaskDetail(task) {
 async function saveTask() {
     if (!currentTask) return;
 
-    const taskTitle = document.getElementById("detailTaskTitle").value.trim();
-    if (!taskTitle) {
+    const textInput = document.getElementById("textInputField").value.trim();
+    if (!textInput) {
         alert("タスク名を入力してください");
         return;
     }
@@ -378,7 +378,7 @@ async function saveTask() {
         // CSRFトークンを取得
         const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 
-        // APIエンドポイントを呼び出し
+        // AI解析APIを呼び出し
         const response = await fetch('/api/tasks/analyze', {
             method: 'POST',
             headers: {
@@ -387,11 +387,12 @@ async function saveTask() {
                 'Accept': 'application/json',
             },
             body: JSON.stringify({
-                task_input: taskTitle
+                text_input: textInput
             })
         });
 
         const result = await response.json();
+        console.log('result:', result);
 
         if (!result.success) {
             alert('エラー: ' + (result.message || 'AI解析に失敗しました'));
@@ -400,10 +401,11 @@ async function saveTask() {
 
         // AI解析結果を取得
         const parsedTask = result.data;
+        console.log('parsedTask:', parsedTask);
 
         // AI解析結果を currentTask オブジェクトに反映
-        currentTask.rawInput = taskTitle;
-        currentTask.task = parsedTask.task || taskTitle;
+        currentTask.textInput = textInput;
+        currentTask.task = parsedTask.task || textInput;
         currentTask.date = parsedTask.date || "指定なし";
         currentTask.assignee = parsedTask.assignee || "指定なし";
         currentTask.priority = parsedTask.priority || "指定なし";
@@ -437,7 +439,7 @@ async function saveTask() {
             body: JSON.stringify({
                 id: currentTask.id,
                 task: currentTask.task,
-                raw_input: currentTask.rawInput,
+                text_input: currentTask.textInput,
                 date: currentTask.date,
                 assignee: currentTask.assignee,
                 priority: currentTask.priority

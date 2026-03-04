@@ -92,10 +92,10 @@ class TaskController extends Controller
     public function analyzeTask(Request $request)
     {
         $request->validate([
-            'task_input' => 'required|string|max:1000',
+            'text_input' => 'required|string|max:1000',
         ]);
 
-        $taskInput = $request->input('task_input');
+        $textInput = $request->input('text_input');
 
         // 今日の日付情報を取得
         $today = now();
@@ -161,7 +161,7 @@ class TaskController extends Controller
                     ],
                     [
                         'role' => 'user',
-                        'content' => $taskInput,
+                        'content' => $textInput,
                     ],
                 ],
             ]);
@@ -186,7 +186,7 @@ class TaskController extends Controller
             $aiResponse = $data['choices'][0]['message']['content'] ?? '';
 
             // AI応答を解析
-            $parsedTask = $this->parseTaskResponse($aiResponse, $taskInput);
+            $parsedTask = $this->parseTaskResponse($aiResponse, $textInput);
 
             return response()->json([
                 'success' => true,
@@ -200,7 +200,8 @@ class TaskController extends Controller
         }
     }
 
-    private function parseTaskResponse($responseText, $rawInput)
+    // AI応答を解析して配列に変換するメソッド
+    private function parseTaskResponse($responseText, $textInput)
     {
         // 正規表現でAI応答から情報を抽出
         preg_match('/タスク[：:]\s*(.+)/u', $responseText, $taskMatch);
@@ -209,11 +210,14 @@ class TaskController extends Controller
         preg_match('/優先度[：:]\s*(.+)/u', $responseText, $priorityMatch);
 
         return [
-            'rawInput' => $rawInput,
+            'textInput' => $textInput,
             'task' => isset($taskMatch[1]) ? trim($taskMatch[1]) : '',
             'date' => isset($dateMatch[1]) ? trim($dateMatch[1]) : '指定なし',
             'assignee' => isset($assigneeMatch[1]) ? trim($assigneeMatch[1]) : '指定なし',
             'priority' => isset($priorityMatch[1]) ? trim($priorityMatch[1]) : '指定なし',
         ];
     }
+
+    // POST /api/tasks タスクを保存するメソッド
+    public function store(Request $request) {}
 }

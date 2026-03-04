@@ -17,7 +17,7 @@ class Task extends Model
 
     // フィルタリング対象のカラムを指定
     protected $fillable = [
-        'input_text',
+        'text_input',
         'ai_task',
         'due_date',
         'assignee_id',

@@ -133,7 +133,7 @@
             <div class="task-detail-content">
                 <div class="task-detail-title">
                     <div class="task-checkbox" id="detailCheckbox"></div>
-                    <input type="text" id="detailTaskTitle" value="" placeholder="タスクを入力してください" />
+                    <input type="text" id="textInputField" value="" placeholder="タスクを入力してください" />
                 </div>
 
                 <div class="detail-field" id="dateField">
