@@ -89,10 +89,11 @@ class TaskController extends Controller
         return view('tasks.settings');
     }
 
+    // POST /api/tasks/analyze タスクをAI解析するメソッド
     public function analyzeTask(Request $request)
     {
         $request->validate([
-            'text_input' => 'required|string|max:1000',
+            'text_input' => 'required|string|max:500',
         ]);
 
         $textInput = $request->input('text_input');
@@ -139,13 +140,13 @@ class TaskController extends Controller
         - 「なるはや」「至急」「急ぎ」などは優先度「高」としてください
 
         【出力形式】
-        以下の形式で出力してください。
-
-        入力内容：xxx
-        タスク：xxx
-        日付：yyyy年mm月dd日 または 指定なし
-        担当者：xxx
-        優先度：高 / 中 / 低 / 指定なし";
+        以下のJSON形式で出力してください:
+        {
+        \"aiTask\": \"タスク名\",
+        \"date\": \"yyyy年mm月dd日 または 指定なし\",
+        \"assignee\": \"担当者名 または 指定なし\",
+        \"priority\": \"高 または 中 または 低 または 指定なし\"
+        }";
 
         try {
             // OpenAI APIを呼び出し
@@ -153,7 +154,7 @@ class TaskController extends Controller
                 'Authorization' => 'Bearer ' . env('OPENAI_API_KEY'),
                 'Content-Type' => 'application/json',
             ])->timeout(30)->post('https://api.openai.com/v1/chat/completions', [
-                'model' => 'gpt-4',
+                'model' => 'gpt-5',
                 'messages' => [
                     [
                         'role' => 'system',
@@ -164,8 +165,12 @@ class TaskController extends Controller
                         'content' => $textInput,
                     ],
                 ],
+                'response_format' => [
+                    'type' => 'json_object',
+                ],
             ]);
 
+            // HTTPステータスが4xx / 5xx の場合はエラーを返す
             if ($response->failed()) {
                 return response()->json([
                     'success' => false,
@@ -174,8 +179,10 @@ class TaskController extends Controller
                 ], 500);
             }
 
+            // APIレスポンス(JSON)をPHP配列として取得
             $data = $response->json();
 
+            // APIレスポンスにエラーが含まれている場合はエラーを返す
             if (isset($data['error'])) {
                 return response()->json([
                     'success' => false,
@@ -183,16 +190,30 @@ class TaskController extends Controller
                 ], 500);
             }
 
+            // OpenAIのレスポンスからAI回答(content)を取得
             $aiResponse = $data['choices'][0]['message']['content'] ?? '';
 
-            // AI応答を解析
-            $parsedTask = $this->parseTaskResponse($aiResponse, $textInput);
+            // AIが返したJSON文字列をPHP配列に変換
+            $parsedTask = json_decode($aiResponse, true);
 
+            // JSON解析エラーが発生した場合はエラーを返す
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'JSON解析エラー: ' . json_last_error_msg(),
+                ], 500);
+            }
+
+            // 入力テキストを解析結果に追加
+            $parsedTask['textInput'] = $textInput;
+
+            // AI解析結果をJSONでフロントエンドに返す
             return response()->json([
                 'success' => true,
                 'data' => $parsedTask,
             ]);
         } catch (\Exception $e) {
+            // エラーが発生した場合はエラーを返す
             return response()->json([
                 'success' => false,
                 'message' => 'エラーが発生しました: ' . $e->getMessage(),
@@ -200,24 +221,14 @@ class TaskController extends Controller
         }
     }
 
-    // AI応答を解析して配列に変換するメソッド
-    private function parseTaskResponse($responseText, $textInput)
-    {
-        // 正規表現でAI応答から情報を抽出
-        preg_match('/タスク[：:]\s*(.+)/u', $responseText, $taskMatch);
-        preg_match('/日付[：:]\s*(.+)/u', $responseText, $dateMatch);
-        preg_match('/担当者[：:]\s*(.+)/u', $responseText, $assigneeMatch);
-        preg_match('/優先度[：:]\s*(.+)/u', $responseText, $priorityMatch);
-
-        return [
-            'textInput' => $textInput,
-            'task' => isset($taskMatch[1]) ? trim($taskMatch[1]) : '',
-            'date' => isset($dateMatch[1]) ? trim($dateMatch[1]) : '指定なし',
-            'assignee' => isset($assigneeMatch[1]) ? trim($assigneeMatch[1]) : '指定なし',
-            'priority' => isset($priorityMatch[1]) ? trim($priorityMatch[1]) : '指定なし',
-        ];
-    }
-
     // POST /api/tasks タスクを保存するメソッド
     public function store(Request $request) {}
+
+
+    // ★★★ DELETE /api/tasks/{id} タスクを削除するメソッド
+
+    // ★★★ PATCH /api/tasks/{id}/complete タスクを完了にするメソッド
+    // ・完了に日時を記録する
+    // ・完了者を記録する
+    // ・完了フラグを立てる
 }
