@@ -1,7 +1,11 @@
-// 現在のログインユーザー
+//==============================================================================
+// 0. 設定（定数）
+//==============================================================================
+
+/** 現在のログインユーザー名 */
 const CURRENT_USER = "松田";
 
-// メンバーリスト
+/** タスク担当者として選択可能なメンバーリスト */
 const MEMBERS = [
     { id: 1, name: "松本" },
     { id: 2, name: "野中" },
@@ -13,28 +17,67 @@ const MEMBERS = [
     { id: 8, name: "松田" },
 ];
 
-// {}ではなく、nullを初期値にすることで、タスクが存在しないことを明示的に表現する
-// 現在編集中のタスク
-let currentTask = null;
-let selectedMember = null;
-
-// 現在表示中のタスクリスト
-let currentTaskList = [];
-
-// 日付選択用の変数
-let selectedDate = null;
-let currentYear = new Date().getFullYear();
-let currentMonth = new Date().getMonth();
-
-// アラート用の変数
-let alertCallback = null;
-
-// CSRFトークンを取得
+/** LaravelのCSRF保護用トークン */
 const csrfToken = document
     .querySelector('meta[name="csrf-token"]')
     .getAttribute("content");
 
-// データベースの日付形式 (YYYY-MM-DD HH:MM:SS) を 年月日 に変換する関数
+//==============================================================================
+// 1. グローバルState（画面/選択状態）
+//==============================================================================
+
+/**
+ * 現在編集中のタスクオブジェクト
+ * nullの場合はタスクが選択されていないことを示す
+ * @type {Object|null}
+ */
+let currentTask = null;
+
+/**
+ * メンバー選択モーダルで現在選択されているメンバーID
+ * @type {number|null}
+ */
+let selectedMember = null;
+
+/**
+ * 現在表示中のタスクリスト（フィルター適用後）
+ * @type {Array<Object>}
+ */
+let currentTaskList = [];
+
+/**
+ * 日付選択モーダルで選択された日付
+ * @type {Date|null}
+ */
+let selectedDate = null;
+
+/**
+ * カレンダー表示中の年
+ * @type {number}
+ */
+let currentYear = new Date().getFullYear();
+
+/**
+ * カレンダー表示中の月（0-11）
+ * @type {number}
+ */
+let currentMonth = new Date().getMonth();
+
+/**
+ * アラートモーダルの確認ボタン押下時に実行されるコールバック関数
+ * @type {Function|null}
+ */
+let alertCallback = null;
+
+//==============================================================================
+// 2. ユーティリティ（共通関数）
+//==============================================================================
+
+/**
+ * データベースの日付形式を日本語の年月日形式に変換
+ * @param {string|null} dateString - YYYY-MM-DD HH:MM:SS形式の日付文字列
+ * @returns {string} YYYY年MM月DD日形式の文字列、またはnullの場合は「指定なし」
+ */
 function formatDate(dateString) {
     if (!dateString) return "指定なし";
 
@@ -46,16 +89,22 @@ function formatDate(dateString) {
     return `${year}年${month}月${day}日`;
 }
 
-// XSS対策用のHTMLエスケープ関数
-// ユーザー入力などの文字列を textContent にセットすることで
-// <script> 等のタグをHTMLエンティティに変換し、安全に innerHTML へ挿入できるようにする
+/**
+ * XSS対策用のHTMLエスケープ
+ * ユーザー入力をHTMLエンティティに変換し、安全にinnerHTMLへ挿入可能にする
+ * @param {string} text - エスケープ対象の文字列
+ * @returns {string} HTMLエスケープされた文字列
+ */
 function escapeHtml(text) {
     const div = document.createElement("div");
     div.textContent = text;
     return div.innerHTML;
 }
 
-// タスク取得失敗時などにエラーメッセージを表示する関数
+/**
+ * タスク一覧コンテナにエラーメッセージを表示
+ * @param {string} message - 表示するエラーメッセージ
+ */
 function showErrorMessage(message) {
     const container = document.getElementById("taskListContainer");
     if (!container) return;
@@ -66,7 +115,11 @@ function showErrorMessage(message) {
     </div>`;
 }
 
-//  Laravel APIから返されたDB形式のタスクをフロントエンド形式に変換する関数
+/**
+ * Laravel APIから返されたDB形式のタスクをフロントエンド形式に変換
+ * @param {Object} dbTask - データベース形式のタスクオブジェクト
+ * @returns {Object} フロントエンド表示用に変換されたタスクオブジェクト
+ */
 function transformTaskData(dbTask) {
     return {
         id: dbTask.id,
@@ -84,15 +137,25 @@ function transformTaskData(dbTask) {
     };
 }
 
-// 初期化
-// ページのHTMLが全部読み込まれたら、setupEventListeners() を実行する
+//==============================================================================
+// 3. 初期化
+//==============================================================================
+
+/**
+ * DOMの読み込み完了後にイベントリスナーを設定
+ */
 document.addEventListener("DOMContentLoaded", () => {
     setupEventListeners();
 });
 
-// イベントリスナー設定
+//==============================================================================
+// 4. イベント登録
+//==============================================================================
+
+/**
+ * 全てのUIコンポーネントにイベントリスナーを設定
+ */
 function setupEventListeners() {
-    // 音声入力ボタン
     const voiceInputBtn = document.getElementById("voiceInputBtn");
     if (voiceInputBtn) {
         voiceInputBtn.addEventListener("click", () => {
@@ -100,7 +163,6 @@ function setupEventListeners() {
         });
     }
 
-    // モーダルを閉じる
     const closeInputModal = document.getElementById("closeInputModal");
     if (closeInputModal) {
         closeInputModal.addEventListener("click", () => {
@@ -131,13 +193,11 @@ function setupEventListeners() {
         });
     }
 
-    // タスク送信
     const submitTask = document.getElementById("submitTask");
     if (submitTask) {
         submitTask.addEventListener("click", saveTask);
     }
 
-    // 担当者フィールドクリック
     const assigneeField = document.getElementById("assigneeField");
     if (assigneeField) {
         assigneeField.addEventListener("click", () => {
@@ -145,7 +205,6 @@ function setupEventListeners() {
         });
     }
 
-    // 日付フィールドクリック
     const dateField = document.getElementById("dateField");
     if (dateField) {
         dateField.addEventListener("click", () => {
@@ -153,7 +212,6 @@ function setupEventListeners() {
         });
     }
 
-    // メンバー選択
     const applyMemberBtn = document.getElementById("applyMemberBtn");
     if (applyMemberBtn) {
         applyMemberBtn.addEventListener("click", applyMember);
@@ -167,7 +225,6 @@ function setupEventListeners() {
         });
     }
 
-    // 優先度ボタン
     document.querySelectorAll(".priority-btn").forEach((btn) => {
         btn.addEventListener("click", (e) => {
             document.querySelectorAll(".priority-btn").forEach((b) => {
@@ -181,45 +238,32 @@ function setupEventListeners() {
         });
     });
 
-    // タスク保存ボタン
     const saveTaskBtn = document.getElementById("saveTaskBtn");
     if (saveTaskBtn) {
         saveTaskBtn.addEventListener("click", saveTask);
     }
 
-    // タスク完了
     const completeTaskBtn = document.getElementById("completeTaskBtn");
     if (completeTaskBtn) {
         completeTaskBtn.addEventListener("click", completeTask);
     }
 
-    // タスク削除
     const deleteTaskBtn = document.getElementById("deleteTaskBtn");
     if (deleteTaskBtn) {
         deleteTaskBtn.addEventListener("click", deleteTask);
     }
 
-    //--------------------------------------------------------------------------------
-    // フィルタータブをクリックしたときの処理
-    //--------------------------------------------------------------------------------
-
-    // .filter-tab というクラス名を持つ要素をすべて取得
     document.querySelectorAll(".filter-tab").forEach((tab) => {
         tab.addEventListener("click", (e) => {
-            // 全部のタブから active クラスを削除
             document
                 .querySelectorAll(".filter-tab")
                 .forEach((t) => t.classList.remove("active"));
-            // e.target はクリックした要素 → クリックしたタブに active クラスを追加
             e.target.classList.add("active");
-            // e.target.dataset.filter はクリックしたタブの data-filter 属性の値
             const filter = e.target.dataset.filter;
-            // filterTasks 関数を呼び出し、フィルターを適用
             filterTasks(filter);
         });
     });
 
-    // 日付選択モーダルのイベント
     const todayBtn = document.getElementById("todayBtn");
     if (todayBtn) {
         todayBtn.addEventListener("click", () => selectShortcut("today"));
@@ -260,7 +304,6 @@ function setupEventListeners() {
         clearDateBtn.addEventListener("click", clearDateSelection);
     }
 
-    // アラートモーダル
     const alertCancelBtn = document.getElementById("alertCancelBtn");
     if (alertCancelBtn) {
         alertCancelBtn.addEventListener("click", () => {
@@ -281,7 +324,14 @@ function setupEventListeners() {
     }
 }
 
-// モーダル開閉
+//==============================================================================
+// 5. モーダル/アラートUI
+//==============================================================================
+
+/**
+ * モーダルを開く
+ * @param {string} modalId - 開くモーダルのDOM要素ID
+ */
 function openModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -289,6 +339,10 @@ function openModal(modalId) {
     }
 }
 
+/**
+ * モーダルを閉じる
+ * @param {string} modalId - 閉じるモーダルのDOM要素ID
+ */
 function closeModal(modalId) {
     const modal = document.getElementById(modalId);
     if (modal) {
@@ -296,7 +350,14 @@ function closeModal(modalId) {
     }
 }
 
-// アラート表示
+/**
+ * 確認アラートモーダルを表示
+ * @param {string} title - アラートのタイトル
+ * @param {string} message - アラートのメッセージ（HTML可）
+ * @param {string} confirmText - 確認ボタンのテキスト
+ * @param {Function} callback - 確認ボタン押下時に実行される関数
+ * @param {string} [iconClass="fas fa-user"] - アイコンのCSSクラス
+ */
 function showAlert(
     title,
     message,
@@ -313,15 +374,25 @@ function showAlert(
     openModal("alertModal");
 }
 
-// 他メンバーのタスクかチェック
+//==============================================================================
+// 6. タスク操作
+//==============================================================================
+
+/**
+ * 他メンバーに割り当てられたタスクかどうかを判定
+ * @param {Object} task - 判定対象のタスクオブジェクト
+ * @returns {boolean} 他メンバーのタスクの場合true
+ */
 function isOtherMemberTask(task) {
     return task.assignee !== CURRENT_USER && task.assignee !== "指定なし";
 }
 
-// 新規タスクモーダルを開く
+/**
+ * 新規タスク作成モーダルを開く
+ * 初期値として現在のユーザーを担当者に設定
+ */
 function openNewTaskModal() {
     currentTask = {
-        // idは持たない（サーバー側で生成される）
         textInput: "",
         aiTask: "",
         date: "指定なし",
@@ -336,9 +407,8 @@ function openNewTaskModal() {
 
     document.getElementById("textInputField").value = "";
     document.getElementById("detailDate").textContent = "指定なし";
-    document.getElementById("detailAssignee").textContent = CURRENT_USER; // ★★★
+    document.getElementById("detailAssignee").textContent = CURRENT_USER;
 
-    // 優先度ボタンをリセット
     document.querySelectorAll(".priority-btn").forEach((btn) => {
         btn.classList.remove("active", "high", "medium", "low");
     });
@@ -346,7 +416,10 @@ function openNewTaskModal() {
     openModal("taskDetailModal");
 }
 
-// タスク詳細を表示
+/**
+ * 既存タスクの詳細をモーダルに表示
+ * @param {Object} task - 表示するタスクオブジェクト
+ */
 function showTaskDetail(task) {
     currentTask = task;
     document.getElementById("textInputField").value = task.aiTask;
@@ -354,7 +427,6 @@ function showTaskDetail(task) {
     document.getElementById("detailAssignee").textContent =
         task.assignee === CURRENT_USER ? CURRENT_USER : task.assignee;
 
-    // 優先度ボタンを設定
     document.querySelectorAll(".priority-btn").forEach((btn) => {
         btn.classList.remove("active", "high", "medium", "low");
         if (btn.dataset.priority === task.priority) {
@@ -368,22 +440,31 @@ function showTaskDetail(task) {
     openModal("taskDetailModal");
 }
 
-// タスク保存（AI解析あり）
+/**
+ * タスクを保存（AI解析を実行してからデータベースに保存）
+ * 1. ユーザー入力をAI解析APIに送信
+ * 2. AI解析結果とユーザーの手動入力をマージ
+ * 3. データベースに保存
+ * @async
+ */
 async function saveTask() {
+    // ★★★関数の責務分離を行う
     if (!currentTask) return;
 
+    // ユーザー入力を取得
     const textInput = document.getElementById("textInputField").value.trim();
     if (!textInput) {
         alert("タスク名を入力してください");
         return;
     }
 
+    // 保存ボタンを無効化して解析中のメッセージを表示
     const saveBtn = document.getElementById("saveTaskBtn");
     saveBtn.disabled = true;
     saveBtn.textContent = "解析中...";
 
     try {
-        // AI解析APIを呼び出し
+        // AI解析APIにリクエストを送信
         const response = await fetch("/api/tasks/analyze", {
             method: "POST",
             headers: {
@@ -396,6 +477,8 @@ async function saveTask() {
             }),
         });
 
+        // AI解析APIのレスポンス(JSON)を取得
+        // 例: { success: true, message: "...", data: {...} }
         const result = await response.json();
         console.log("result:", result);
 
@@ -404,11 +487,12 @@ async function saveTask() {
             return;
         }
 
-        // AI解析結果を取得
+        // APIレスポンスの data 部分だけを取り出す(dataにAIが解析したタスク情報が入っている)
+        // 例: { aiTask: "...", date: "...", assignee: "...", priority: "..." }
         const parsedTask = result.data;
         console.log("parsedTask:", parsedTask);
 
-        // AI解析結果を currentTask オブジェクトに反映
+        // 解析結果をcurrentTaskオブジェクトに上書き
         currentTask.textInput = textInput;
         currentTask.aiTask = parsedTask.aiTask || textInput;
         currentTask.date = parsedTask.date || "指定なし";
@@ -435,7 +519,7 @@ async function saveTask() {
             currentTask.priority = manualPriority;
         }
 
-        // ボディデータを作成(新規作成時はidを含まない)
+        // データベースに保存するためのボディデータを作成
         const bodyData = {
             ai_task: currentTask.aiTask,
             text_input: currentTask.textInput,
@@ -444,12 +528,12 @@ async function saveTask() {
             priority: currentTask.priority,
         };
 
-        // 編集モードならidも追加
+        // タスクIDが存在する場合はそれをボディデータに追加(編集時)
         if (currentTask.id) {
             bodyData.id = currentTask.id;
         }
 
-        // DB保存API呼び出し
+        // データベースに保存するためのAPIにリクエストを送信
         const saveResponse = await fetch("/api/tasks", {
             method: "POST",
             headers: {
@@ -460,6 +544,7 @@ async function saveTask() {
             body: JSON.stringify(bodyData),
         });
 
+        // データベースに保存するためのAPIのレスポンスをJSONとして取得
         const saveResult = await saveResponse.json();
 
         if (!saveResult.success) {
@@ -470,21 +555,25 @@ async function saveTask() {
         // モーダルを閉じる
         closeModal("taskDetailModal");
 
-        // ★★★タスクリストを再取得して表示
-        // filterTasks('現在のフィルター'); →transformTaskData()でDB形式を変換
+        // // ★★★タスク一覧を更新
+        // loadTasks();
     } catch (error) {
         alert("エラー: " + error.message);
     } finally {
+        // 保存ボタンを有効化して保存中のメッセージを非表示にする
         saveBtn.disabled = false;
         saveBtn.textContent = "保存";
     }
 }
 
-// タスク削除(確認ダイアログを表示)
+/**
+ * タスク削除の確認ダイアログを表示
+ * 他メンバーのタスクの場合は専用のアラートモーダルを表示
+ */
 function deleteTask() {
     if (!currentTask) return;
 
-    // 他メンバーのタスクの場合はアラート表示
+    // 他メンバーのタスクの場合は確認アラートを表示
     if (isOtherMemberTask(currentTask)) {
         const assigneeName = currentTask.assignee;
         showAlert(
@@ -497,18 +586,21 @@ function deleteTask() {
         return;
     }
 
-    // 自分のタスクの場合は通常の確認ダイアログ
+    // 自分のタスクの場合は通常の確認ダイアログを表示
     if (confirm("このタスクを削除しますか?")) {
         executeDeleteTask();
     }
 }
 
-// タスク削除実行
+/**
+ * タスク削除をサーバーに送信して実行
+ * @async
+ */
 async function executeDeleteTask() {
     if (!currentTask) return;
 
     try {
-        // DELETE APIを呼び出し
+        // タスク削除APIにリクエストを送信
         const response = await fetch(`/api/tasks/${currentTask.id}`, {
             method: "DELETE",
             headers: {
@@ -517,10 +609,9 @@ async function executeDeleteTask() {
             },
         });
 
-        // LaravelからのJSONレスポンスをJSオブジェクトに変換
+        // タスク削除APIのレスポンスをJSオブジェクトとして取得
         const result = await response.json();
 
-        // Laravelで削除が失敗した場合
         if (!result.success) {
             alert("削除に失敗しました: " + (result.message || ""));
             return;
@@ -529,19 +620,20 @@ async function executeDeleteTask() {
         // モーダルを閉じる
         closeModal("taskDetailModal");
 
-        // // ★★★タスクリストを再取得(現在は削除後手動リロードしたら「自分」フィルタに画面遷移する)
+        // // ★★★タスク一覧を更新
         // loadTasks();
     } catch (error) {
-        // 通信エラーやJSエラー
         alert("エラー: " + error.message);
     }
 }
 
-// タスク完了
+/**
+ * タスク完了の確認処理
+ * 他メンバーのタスクの場合は確認アラートを表示
+ */
 function completeTask() {
     if (!currentTask) return;
 
-    // 他メンバーのタスクの場合はアラート表示
     if (isOtherMemberTask(currentTask)) {
         const assigneeName = currentTask.assignee;
         showAlert(
@@ -557,11 +649,13 @@ function completeTask() {
     executeCompleteTask();
 }
 
-// タスク完了実行
+/**
+ * タスク完了を実行
+ * 完了フラグと完了日時、完了者を設定
+ */
 function executeCompleteTask() {
     if (!currentTask) return;
 
-    // 完了情報を追加
     currentTask.completedFlg = true;
     currentTask.completedAt = new Date().toISOString();
     currentTask.completedBy = CURRENT_USER;
@@ -569,7 +663,10 @@ function executeCompleteTask() {
     closeModal("taskDetailModal");
 }
 
-// タスク編集
+/**
+ * タスクIDから該当タスクを検索して詳細表示
+ * @param {number} taskId - 編集対象のタスクID
+ */
 function editTask(taskId) {
     const task = currentTaskList.find((t) => t.id === taskId);
     if (task) {
@@ -577,34 +674,39 @@ function editTask(taskId) {
     }
 }
 
-// 優先度クラス取得
+//==============================================================================
+// 7. タスク一覧描画
+//==============================================================================
+
+/**
+ * 優先度に対応するCSSクラス名を取得
+ * @param {string} priority - 優先度（"高"、"中"、"低"、"指定なし"）
+ * @returns {string} CSSクラス名
+ */
 function getPriorityClass(priority) {
     if (priority === "高") return "priority-high";
     if (priority === "中") return "priority-medium";
     return "";
 }
 
-// JSON API方式でフィルタリングしたタスクを取得して表示する
+/**
+ * フィルター条件に基づいてタスクを取得し、画面に表示
+ * @param {string} filter - フィルター種別（"all", "mine", "completed"等）
+ * @async
+ */
 async function filterTasks(filter) {
     try {
-        // 1. APIからデータ取得
         const response = await fetch(`/api/tasks?filter=${filter}`);
 
-        // HTTP的に成功か確認
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
-        // APIレスポンスをJSON形式に変換
         const data = await response.json();
-
-        // 2. DB形式 → フロント表示形式に変換
         const transformedTasks = data.tasks.map(transformTaskData);
 
-        // グローバル変数に保存 (editTask()で使用）
         currentTaskList = transformedTasks;
 
-        // 3. タスク表示エリアを取得
         const container = document.getElementById("taskListContainer");
 
         if (transformedTasks.length === 0) {
@@ -617,20 +719,22 @@ async function filterTasks(filter) {
             return;
         }
 
-        // 4. renderTaskItem()を使用し、タスク一覧を描画
-        // completedフィルター時のみ完了表示モードにする
         const isCompleted = filter === "completed";
         container.innerHTML = transformedTasks
             .map((task) => renderTaskItem(task, isCompleted))
             .join("");
     } catch (error) {
-        // エラー処理
         console.error("タスクの取得に失敗しました:", error);
         showErrorMessage("タスクの読み込みに失敗しました");
     }
 }
 
-// タスクアイテムのHTML生成
+/**
+ * タスクアイテムのHTMLを生成
+ * @param {Object} task - タスクオブジェクト
+ * @param {boolean} [isCompleted=false] - 完了タスク表示モードかどうか
+ * @returns {string} タスクアイテムのHTML文字列
+ */
 function renderTaskItem(task, isCompleted = false) {
     const completedClass = isCompleted ? "completed-task" : "";
     const checkboxContent = isCompleted ? '<i class="fas fa-check"></i>' : "";
@@ -660,7 +764,13 @@ function renderTaskItem(task, isCompleted = false) {
     `;
 }
 
-// 完了情報の表示
+/**
+ * 完了タスクの完了情報（完了時刻、完了者）を表示するHTMLを生成
+ * @param {Object} task - タスクオブジェクト
+ * @param {string} checkboxContent - チェックボックス内のHTML
+ * @param {string} priorityClass - 優先度のCSSクラス名
+ * @returns {string} 完了情報のHTML文字列、completedAtがない場合は空文字列
+ */
 function renderCompletedInfo(task, checkboxContent, priorityClass) {
     if (!task.completedAt) return "";
 
@@ -670,7 +780,6 @@ function renderCompletedInfo(task, checkboxContent, priorityClass) {
         minute: "2-digit",
     });
 
-    // タスクを完了したユーザーの名前（またはID）を変数に代入
     const completedByName = task.completedBy;
 
     return `
@@ -682,7 +791,12 @@ function renderCompletedInfo(task, checkboxContent, priorityClass) {
     `;
 }
 
-// 未割当タスクのグループ表示
+/**
+ * 未割当タスクをグループ分けして表示
+ * 「担当者なし」と「優先度なし」の2グループに分類
+ * @param {Array<Object>} tasks - 表示するタスクの配列
+ * @param {HTMLElement} container - 表示先のDOM要素
+ */
 function renderUnassignedTasks(tasks, container) {
     if (tasks.length === 0) {
         container.innerHTML = `
@@ -732,7 +846,11 @@ function renderUnassignedTasks(tasks, container) {
     container.innerHTML = html;
 }
 
-// 完了済みタスクの日付別グループ表示
+/**
+ * 完了済みタスクを完了日時でグループ分けして表示
+ * @param {Array<Object>} tasks - 完了済みタスクの配列
+ * @param {HTMLElement} container - 表示先のDOM要素
+ */
 function renderCompletedTasks(tasks, container) {
     if (tasks.length === 0) {
         container.innerHTML = `
@@ -765,7 +883,11 @@ function renderCompletedTasks(tasks, container) {
     container.innerHTML = html;
 }
 
-// 完了日時でタスクをグループ分け
+/**
+ * 完了日時でタスクをグループ分け
+ * @param {Array<Object>} tasks - 完了済みタスクの配列
+ * @returns {Object} 日付キーをキーとし、タスク配列を値とするオブジェクト
+ */
 function groupTasksByCompletedDate(tasks) {
     const today = new Date();
     const tomorrow = new Date(today);
@@ -794,7 +916,13 @@ function groupTasksByCompletedDate(tasks) {
     return groups;
 }
 
-// 日付グループのキーを取得
+/**
+ * 日付を「今日」「明日」「M月D日」形式のキーに変換
+ * @param {Date} date - 変換対象の日付
+ * @param {Date} today - 今日の日付
+ * @param {Date} tomorrow - 明日の日付
+ * @returns {string} 日付グループのキー文字列
+ */
 function getDateGroupKey(date, today, tomorrow) {
     const dateStr = date.toDateString();
     const todayStr = today.toDateString();
@@ -809,13 +937,22 @@ function getDateGroupKey(date, today, tomorrow) {
     }
 }
 
-// メンバー選択モーダルを開く
+//==============================================================================
+// 8. メンバー選択
+//==============================================================================
+
+/**
+ * メンバー選択モーダルを開く
+ */
 function openMemberSelect() {
     renderMemberList();
     openModal("memberSelectModal");
 }
 
-// メンバーリストを描画
+/**
+ * メンバーリストをモーダル内に描画
+ * 選択中のメンバーにはチェックマークを表示
+ */
 function renderMemberList() {
     const memberList = document.getElementById("memberList");
     if (!memberList) return;
@@ -833,13 +970,18 @@ function renderMemberList() {
     ).join("");
 }
 
-// メンバー選択
+/**
+ * メンバーを選択状態にする
+ * @param {number} memberId - 選択するメンバーのID
+ */
 function selectMember(memberId) {
     selectedMember = memberId;
     renderMemberList();
 }
 
-// メンバー適用
+/**
+ * 選択中のメンバーをタスクの担当者フィールドに適用
+ */
 function applyMember() {
     if (selectedMember) {
         const member = MEMBERS.find((m) => m.id === selectedMember);
@@ -850,7 +992,10 @@ function applyMember() {
     closeModal("memberSelectModal");
 }
 
-// 日付選択モーダルを開く
+/**
+ * 日付選択モーダルを開く
+ * 初期表示は今日の日付を選択状態にする
+ */
 function openDateSelectModal() {
     const today = new Date();
     selectedDate = today;
@@ -861,7 +1006,10 @@ function openDateSelectModal() {
     openModal("dateSelectModal");
 }
 
-// カレンダーを描画
+/**
+ * カレンダーを描画
+ * 前月・当月・次月の日付を含む6週間分のカレンダーグリッドを生成
+ */
 function renderCalendar() {
     const firstDay = new Date(currentYear, currentMonth, 1);
     const lastDay = new Date(currentYear, currentMonth + 1, 0);
@@ -898,27 +1046,23 @@ function renderCalendar() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // 前月の日付
     for (let i = firstDayOfWeek - 1; i >= 0; i--) {
         const day = prevLastDate - i;
         const date = new Date(currentYear, currentMonth - 1, day);
         calendarGrid.innerHTML += createDayCell(day, date, true);
     }
 
-    // 当月の日付
     for (let day = 1; day <= lastDate; day++) {
         const date = new Date(currentYear, currentMonth, day);
         calendarGrid.innerHTML += createDayCell(day, date, false);
     }
 
-    // 次月の日付
     const remainingCells = 42 - (firstDayOfWeek + lastDate);
     for (let day = 1; day <= remainingCells; day++) {
         const date = new Date(currentYear, currentMonth + 1, day);
         calendarGrid.innerHTML += createDayCell(day, date, true);
     }
 
-    // 日付クリックイベントを追加
     document.querySelectorAll(".calendar-day").forEach((dayElement) => {
         dayElement.addEventListener("click", function () {
             const dateStr = this.dataset.date;
@@ -928,7 +1072,13 @@ function renderCalendar() {
     });
 }
 
-// 日付セルを作成
+/**
+ * カレンダーの日付セルHTMLを生成
+ * @param {number} day - 日
+ * @param {Date} date - 日付オブジェクト
+ * @param {boolean} isOtherMonth - 前月または次月の日付かどうか
+ * @returns {string} 日付セルのHTML文字列
+ */
 function createDayCell(day, date, isOtherMonth) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -949,7 +1099,10 @@ function createDayCell(day, date, isOtherMonth) {
     return `<div class="${classes.join(" ")}" data-date="${date.toISOString()}">${day}</div>`;
 }
 
-// ショートカット選択
+/**
+ * 日付ショートカット（今日、明日、週末、来週）を選択
+ * @param {string} type - ショートカットの種類（"today", "tomorrow", "weekend", "nextWeek"）
+ */
 function selectShortcut(type) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -979,7 +1132,10 @@ function selectShortcut(type) {
     renderCalendar();
 }
 
-// 月を変更
+/**
+ * カレンダーの表示月を変更
+ * @param {number} delta - 月の増減値（-1で前月、+1で次月）
+ */
 function changeMonth(delta) {
     currentMonth += delta;
     if (currentMonth < 0) {
@@ -992,7 +1148,9 @@ function changeMonth(delta) {
     renderCalendar();
 }
 
-// 日付選択を保存
+/**
+ * 選択された日付をタスクの期限フィールドに適用
+ */
 function saveDateSelection() {
     if (selectedDate) {
         const year = selectedDate.getFullYear();
@@ -1008,7 +1166,9 @@ function saveDateSelection() {
     closeModal("dateSelectModal");
 }
 
-// 日付選択をクリア
+/**
+ * 日付選択をクリアして「指定なし」に戻す
+ */
 function clearDateSelection() {
     selectedDate = null;
     const detailDate = document.getElementById("detailDate");
