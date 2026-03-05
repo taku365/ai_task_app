@@ -106,13 +106,19 @@ class TaskController extends Controller
         $weekday = $weekdays[$today->dayOfWeek];
         $todayString = $today->format('Y年n月j日') . "（{$weekday}）";
 
+        // ★★★ログインユーザーを取得
+        $currentUser = User::where('email', 'matsuda@example.com')->first();
+
+        // ★★★ データベースから全ユーザー名を取得
+        $userNames = User::pluck('name')->implode(', ');
+
         // OpenAI APIに送信するプロンプト
         $systemPrompt = "
             あなたはタスク管理の専門家です。
             以下の入力テキストから、タスク管理に必要な情報を抽出してください。
 
             【前提】
-            - この入力はログインユーザー本人が行っています
+            - この入力はログインユーザー本人（{$currentUser->name}）が行っています
             - 推測や補完は行わず、明示されている情報のみを使用してください
             - 判断できない項目は「指定なし」としてください
 
@@ -130,12 +136,12 @@ class TaskController extends Controller
             - これらの表現と日付が明示されている場合は、日付を優先してください
             - 今日は {$todayString} です
             - 週の定義：月曜日が週の始まり、金曜日が週の終わりです
-            - 「今週中」「来週中」はその週の金曜日を期限としてください
+            - 「今週末」「今週中」「来週中」はその週の金曜日を期限としてください
 
             4. 担当者
             - 以下の候補から選んでください
-            - ASSIGNEE_LIST = [松本, 野中, 白石, 松波, 宮原, 安岡, 阪本, 松田]
-            - 人名が明示されていない場合、または「自分」「私」「俺」などの表現は「あなた」としてください
+            - ASSIGNEE_LIST = [{$userNames}]
+            - 人名が明示されていない場合、または「自分」「私」「俺」などの表現は「{$currentUser->name}」としてください
 
             5. 優先度
             - 高・中・低 のいずれかで出力してください
