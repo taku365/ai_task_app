@@ -29,6 +29,11 @@ let currentMonth = new Date().getMonth();
 // アラート用の変数
 let alertCallback = null;
 
+// CSRFトークンを取得
+const csrfToken = document
+    .querySelector('meta[name="csrf-token"]')
+    .getAttribute("content");
+
 // データベースの日付形式 (YYYY-MM-DD HH:MM:SS) を 年月日 に変換する関数
 function formatDate(dateString) {
     if (!dateString) return "指定なし";
@@ -378,11 +383,6 @@ async function saveTask() {
     saveBtn.textContent = "解析中...";
 
     try {
-        // CSRFトークンを取得
-        const csrfToken = document
-            .querySelector('meta[name="csrf-token"]')
-            .getAttribute("content");
-
         // AI解析APIを呼び出し
         const response = await fetch("/api/tasks/analyze", {
             method: "POST",
@@ -480,7 +480,7 @@ async function saveTask() {
     }
 }
 
-// タスク削除
+// タスク削除(確認ダイアログを表示)
 function deleteTask() {
     if (!currentTask) return;
 
@@ -504,14 +504,37 @@ function deleteTask() {
 }
 
 // タスク削除実行
-function executeDeleteTask() {
+async function executeDeleteTask() {
     if (!currentTask) return;
 
-    const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-    const filteredTasks = tasks.filter((t) => t.id !== currentTask.id);
-    localStorage.setItem("tasks", JSON.stringify(filteredTasks));
+    try {
+        // DELETE APIを呼び出し
+        const response = await fetch(`/api/tasks/${currentTask.id}`, {
+            method: "DELETE",
+            headers: {
+                "X-CSRF-TOKEN": csrfToken,
+                Accept: "application/json",
+            },
+        });
 
-    closeModal("taskDetailModal");
+        // LaravelからのJSONレスポンスをJSオブジェクトに変換
+        const result = await response.json();
+
+        // Laravelで削除が失敗した場合
+        if (!result.success) {
+            alert("削除に失敗しました: " + (result.message || ""));
+            return;
+        }
+
+        // モーダルを閉じる
+        closeModal("taskDetailModal");
+
+        // // ★★★タスクリストを再取得(現在は削除後手動リロードしたら「自分」フィルタに画面遷移する)
+        // loadTasks();
+    } catch (error) {
+        // 通信エラーやJSエラー
+        alert("エラー: " + error.message);
+    }
 }
 
 // タスク完了
@@ -647,6 +670,7 @@ function renderCompletedInfo(task, checkboxContent, priorityClass) {
         minute: "2-digit",
     });
 
+    // タスクを完了したユーザーの名前（またはID）を変数に代入
     const completedByName = task.completedBy;
 
     return `

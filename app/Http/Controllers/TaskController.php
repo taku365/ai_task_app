@@ -341,7 +341,29 @@ class TaskController extends Controller
     }
 
 
-    // ★★★ DELETE /api/tasks/{id} タスクを削除するメソッド
+    // DELETE /api/tasks/{id} タスクを削除するメソッド
+    public function destroy($id)
+    {
+        try {
+            // タスクを検索 (なければ404エラー)
+            $task = Task::findOrFail($id);
+
+            // タスクを削除 (論理削除)
+            $task->delete();
+
+            // 成功レスポンス
+            return response()->json([
+                'success' => true,
+                'message' => 'タスクを削除しました'
+            ]);
+        } catch (\Exception $e) {
+            // エラーレスポンス
+            return response()->json([
+                'success' => false,
+                'message' => 'タスクの削除に失敗しました: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     // ★★★ PATCH /api/tasks/{id}/complete タスクを完了にするメソッド
     // ・完了に日時を記録する
