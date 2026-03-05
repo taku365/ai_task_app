@@ -318,8 +318,8 @@ class TaskController extends Controller
     // ヘルパーメソッド2: 担当者名 → User ID 変換
     private function findUserIdByName($name)
     {
-        // "指定なし" や "あなた" の場合
-        if (empty($name) || $name === '指定なし' || $name === 'あなた') {
+        // "指定なし" の場合
+        if (empty($name) || $name === '指定なし') {
             return null;
         }
 

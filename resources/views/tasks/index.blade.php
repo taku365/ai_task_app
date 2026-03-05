@@ -61,8 +61,7 @@
                                 <span>
                                     {{-- 担当者が存在する場合 --}}
                                     @if ($task->assignee)
-                                        {{-- 担当者がログインユーザーなら「あなた」表示、そうでなければ担当者名表示 --}}
-                                        {{ $task->assignee->id === $currentUser->id ? 'あなた' : $task->assignee->name }}
+                                        {{ $task->assignee->name }}
                                     @else
                                         {{-- 担当者がいない場合 --}}
                                         未割当
@@ -141,7 +140,7 @@
                         <i class="fas fa-calendar"></i>
                         <span>期限</span>
                     </div>
-                    <div class="detail-field-value" id="detailDate">2026/02/04</div>
+                    <div class="detail-field-value" id="detailDate">指定なし</div>
                 </div>
 
                 <div class="detail-field" id="assigneeField">
@@ -149,7 +148,7 @@
                         <i class="fas fa-user"></i>
                         <span>担当者</span>
                     </div>
-                    <div class="detail-field-value" id="detailAssignee">あなた</div>
+                    <div class="detail-field-value" id="detailAssignee">{{ $currentUser->name }}</div>
                 </div>
 
                 <div class="detail-field">

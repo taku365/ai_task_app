@@ -310,12 +310,7 @@ function showAlert(
 
 // 他メンバーのタスクかチェック
 function isOtherMemberTask(task) {
-    return (
-        task.assignee !== CURRENT_USER &&
-        task.assignee !== "あなた" &&
-        task.assignee !== "松田" &&
-        task.assignee !== "指定なし"
-    );
+    return task.assignee !== CURRENT_USER && task.assignee !== "指定なし";
 }
 
 // 新規タスクモーダルを開く
@@ -336,7 +331,7 @@ function openNewTaskModal() {
 
     document.getElementById("textInputField").value = "";
     document.getElementById("detailDate").textContent = "指定なし";
-    document.getElementById("detailAssignee").textContent = "あなた"; // ★★★　currentUserの名前を表示する?
+    document.getElementById("detailAssignee").textContent = CURRENT_USER; // ★★★
 
     // 優先度ボタンをリセット
     document.querySelectorAll(".priority-btn").forEach((btn) => {
@@ -352,11 +347,7 @@ function showTaskDetail(task) {
     document.getElementById("textInputField").value = task.aiTask;
     document.getElementById("detailDate").textContent = task.date;
     document.getElementById("detailAssignee").textContent =
-        task.assignee === CURRENT_USER ||
-        task.assignee === "松田" ||
-        task.assignee === "あなた"
-            ? "あなた"
-            : task.assignee;
+        task.assignee === CURRENT_USER ? CURRENT_USER : task.assignee;
 
     // 優先度ボタンを設定
     document.querySelectorAll(".priority-btn").forEach((btn) => {
@@ -424,19 +415,20 @@ async function saveTask() {
         currentTask.assignee = parsedTask.assignee || "指定なし";
         currentTask.priority = parsedTask.priority || "指定なし";
 
-        // 手動選択があれば上書き（解析結果よりユーザーの手動選択を優先）
+        // 日付欄の値を取得し、currentTaskオブジェクトのdateを上書きする処理
         const manualDate = document.getElementById("detailDate").textContent;
         if (manualDate && manualDate !== "指定なし") {
             currentTask.date = manualDate;
         }
 
+        // 担当者欄の値を取得し、currentTaskオブジェクトのassigneeを上書きする処理
         const manualAssignee =
             document.getElementById("detailAssignee").textContent;
-        if (manualAssignee && manualAssignee !== "あなた") {
+        if (manualAssignee) {
             currentTask.assignee = manualAssignee;
         }
 
-        // 優先度の手動選択チェック
+        // 優先度欄の値を取得し、currentTaskオブジェクトのpriorityを上書きする処理
         const manualPriority = document.querySelector(".priority-btn.active")
             ?.dataset.priority;
         if (manualPriority) {
@@ -634,7 +626,7 @@ function renderTaskItem(task, isCompleted = false) {
                 </div>
                 <div class="task-meta-item">
                     <i class="far fa-user"></i>
-                    <span>${task.assignee === CURRENT_USER || task.assignee === "松田" || task.assignee === "あなた" ? "あなた" : task.assignee}</span>
+                    <span>${task.assignee}</span>
                 </div>
                 <div class="task-meta-item ${getPriorityClass(task.priority)}">
                     <i class="fas fa-flag"></i>
@@ -655,8 +647,7 @@ function renderCompletedInfo(task, checkboxContent, priorityClass) {
         minute: "2-digit",
     });
 
-    const completedByName =
-        task.completedBy === CURRENT_USER ? "あなた" : task.completedBy;
+    const completedByName = task.completedBy;
 
     return `
         <div class="completed-info">
