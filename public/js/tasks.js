@@ -691,24 +691,29 @@ function getPriorityClass(priority) {
 
 /**
  * フィルター条件に基づいてタスクを取得し、画面に表示
- * @param {string} filter - フィルター種別（"all", "mine", "completed"等）
+ * @param {string} filter - フィルター種別（"self", "member", "unassigned", "completed"）
  * @async
  */
 async function filterTasks(filter) {
     try {
+        // フィルター条件を指定してタスク一覧を取得するためのAPIにリクエストを送信
         const response = await fetch(`/api/tasks?filter=${filter}`);
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
 
+        // APIレスポンス(JSON)を取得
         const data = await response.json();
+        // レスポンスの tasks 配列を取り出し、画面表示用データに変換
         const transformedTasks = data.tasks.map(transformTaskData);
-
+        // currentTaskListに保持する
         currentTaskList = transformedTasks;
 
+        // タスク表示エリアのDOM要素を取得
         const container = document.getElementById("taskListContainer");
 
+        // タスクがない場合
         if (transformedTasks.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
@@ -719,7 +724,10 @@ async function filterTasks(filter) {
             return;
         }
 
+        // 完了タスク表示モードかどうかを判定
         const isCompleted = filter === "completed";
+
+        // タスク一覧HTMLを生成して、タスク表示エリアに表示
         container.innerHTML = transformedTasks
             .map((task) => renderTaskItem(task, isCompleted))
             .join("");
