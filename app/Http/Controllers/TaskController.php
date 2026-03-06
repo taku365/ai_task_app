@@ -321,6 +321,42 @@ class TaskController extends Controller
         }
     }
 
+    // 削除 : DELETE /api/tasks/{id}
+    public function destroy($id)
+    {
+        try {
+            // タスクを検索 (なければ404エラー)
+            $task = Task::findOrFail($id);
+
+            // タスクを削除 (論理削除)
+            $task->delete();
+
+            // 成功レスポンス
+            return response()->json([
+                'success' => true,
+                'message' => 'タスクを削除しました'
+            ]);
+        } catch (\Exception $e) {
+            // エラーレスポンス
+            return response()->json([
+                'success' => false,
+                'message' => 'タスクの削除に失敗しました: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // 完了 : PATCH /api/tasks/{id}/complete
+    // ・完了に日時を記録する
+    // ・完了者を記録する
+    // ・完了フラグを立てる
+
+
+    // 設定画面 : GET /settings
+    public function settings()
+    {
+        return view('tasks.settings');
+    }
+
 
     //==============================================================================
     // ヘルパーメソッド (AIが返した文字列をDB保存用フォーマットへ変換) ★★★ Serviceクラスに分離してもいいかも
@@ -367,44 +403,5 @@ class TaskController extends Controller
         // 優先度名で検索
         $priority = Priority::where('name', $priorityName)->first();
         return $priority ? $priority->id : null;
-    }
-
-    //==============================================================================
-
-
-    // 削除 : DELETE /api/tasks/{id}
-    public function destroy($id)
-    {
-        try {
-            // タスクを検索 (なければ404エラー)
-            $task = Task::findOrFail($id);
-
-            // タスクを削除 (論理削除)
-            $task->delete();
-
-            // 成功レスポンス
-            return response()->json([
-                'success' => true,
-                'message' => 'タスクを削除しました'
-            ]);
-        } catch (\Exception $e) {
-            // エラーレスポンス
-            return response()->json([
-                'success' => false,
-                'message' => 'タスクの削除に失敗しました: ' . $e->getMessage()
-            ], 500);
-        }
-    }
-
-    // 完了 : PATCH /api/tasks/{id}/complete
-    // ・完了に日時を記録する
-    // ・完了者を記録する
-    // ・完了フラグを立てる
-
-
-    // 設定画面 : GET /settings
-    public function settings()
-    {
-        return view('tasks.settings');
     }
 }
