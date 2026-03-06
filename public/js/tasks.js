@@ -27,6 +27,12 @@ const csrfToken = document
 //==============================================================================
 
 /**
+ * 現在適用中のフィルター種別
+ * @type {string} "self" | "member" | "unassigned" | "completed"
+ */
+let currentFilter = "self";
+
+/**
  * 現在編集中のタスクオブジェクト
  * nullの場合はタスクが選択されていないことを示す
  * @type {Object|null}
@@ -597,10 +603,14 @@ function deleteTask() {
  * @async
  */
 async function executeDeleteTask() {
+    // 1. currentTaskが存在するかチェック
     if (!currentTask) return;
 
+    // 2. 削除するタスクのIDを保持
+    const deletedTaskId = currentTask.id;
+
     try {
-        // タスク削除APIにリクエストを送信
+        // 3. タスク削除APIにリクエストを送信
         const response = await fetch(`/api/tasks/${currentTask.id}`, {
             method: "DELETE",
             headers: {
@@ -609,7 +619,7 @@ async function executeDeleteTask() {
             },
         });
 
-        // タスク削除APIのレスポンスをJSオブジェクトとして取得
+        // APIレスポンス(JSON)を取得
         const result = await response.json();
 
         if (!result.success) {
@@ -617,11 +627,35 @@ async function executeDeleteTask() {
             return;
         }
 
+        // 4.成功レスポンスが返ってきた場合
+
         // モーダルを閉じる
         closeModal("taskDetailModal");
 
-        // // ★★★タスク一覧を更新
-        // loadTasks();
+        // currentTaskListから削除したタスクを除外
+        currentTaskList = currentTaskList.filter((t) => t.id !== deletedTaskId);
+
+        // タスク一覧を描画するコンテナを取得
+        const container = document.getElementById("taskListContainer");
+
+        // タスクがない場合
+        if (currentTaskList.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="fas fa-clipboard-list"></i>
+                    <p>タスクがありません</p>
+                </div>
+            `;
+            return;
+        }
+
+        // 現在のフィルター状態が 完了フィルターか判定
+        const isCompleted = currentFilter === "completed";
+
+        // タスク一覧HTMLを生成して、タスク表示エリアに表示
+        container.innerHTML = currentTaskList
+            .map((task) => renderTaskItem(task, isCompleted))
+            .join("");
     } catch (error) {
         alert("エラー: " + error.message);
     }
@@ -695,8 +729,10 @@ function getPriorityClass(priority) {
  * @async
  */
 async function filterTasks(filter) {
+    currentFilter = filter;
+
     try {
-        // フィルター条件を指定してタスク一覧を取得するためのAPIにリクエストを送信
+        // タスク一覧取得APIにリクエストを送信（フィルター条件付き）
         const response = await fetch(`/api/tasks?filter=${filter}`);
 
         if (!response.ok) {
@@ -710,7 +746,7 @@ async function filterTasks(filter) {
         // currentTaskListに保持する
         currentTaskList = transformedTasks;
 
-        // タスク表示エリアのDOM要素を取得
+        // タスク一覧を描画するコンテナを取得
         const container = document.getElementById("taskListContainer");
 
         // タスクがない場合
