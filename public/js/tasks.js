@@ -199,11 +199,6 @@ function setupEventListeners() {
         });
     }
 
-    const submitTask = document.getElementById("submitTask");
-    if (submitTask) {
-        submitTask.addEventListener("click", saveTask);
-    }
-
     const assigneeField = document.getElementById("assigneeField");
     if (assigneeField) {
         assigneeField.addEventListener("click", () => {
@@ -220,7 +215,10 @@ function setupEventListeners() {
 
     const applyMemberBtn = document.getElementById("applyMemberBtn");
     if (applyMemberBtn) {
-        applyMemberBtn.addEventListener("click", applyMember);
+        applyMemberBtn.addEventListener(
+            "click",
+            applyMemberInMemberSelectModal,
+        );
     }
 
     const clearMemberBtn = document.getElementById("clearMemberBtn");
@@ -243,11 +241,6 @@ function setupEventListeners() {
             if (priority === "低") e.target.classList.add("low");
         });
     });
-
-    const saveTaskBtn = document.getElementById("saveTaskBtn");
-    if (saveTaskBtn) {
-        saveTaskBtn.addEventListener("click", saveTask);
-    }
 
     const completeTaskBtn = document.getElementById("completeTaskBtn");
     if (completeTaskBtn) {
@@ -411,28 +404,37 @@ function openNewTaskModal() {
         completedBy: null,
     };
 
+    // 画面表示（初期）
     document.getElementById("textInputField").value = "";
     document.getElementById("detailDate").textContent = "指定なし";
     document.getElementById("detailAssignee").textContent = CURRENT_USER;
-
     document.querySelectorAll(".priority-btn").forEach((btn) => {
         btn.classList.remove("active", "high", "medium", "low");
     });
+
+    // 保存ボタンのイベントリスナーを設定（新規作成用）
+    const saveTaskBtn = document.getElementById("saveTaskBtn");
+    saveTaskBtn.addEventListener("click", createNewTask);
 
     openModal("taskDetailModal");
 }
 
 /**
- * 既存タスクの詳細をモーダルに表示
+ * 既存タスクの詳細モーダルを開く
  * @param {Object} task - 表示するタスクオブジェクト
  */
-function showTaskDetail(task) {
+// ★★★ inline onclick を辞める必要がある
+// eslint-disable-next-line no-unused-vars
+function openTaskDetailModal(taskId) {
+    const task = currentTaskList.find((t) => t.id === taskId);
+    if (!task) return;
     currentTask = task;
+
+    // 画面表示（編集）
     document.getElementById("textInputField").value = task.aiTask;
     document.getElementById("detailDate").textContent = task.date;
     document.getElementById("detailAssignee").textContent =
         task.assignee === CURRENT_USER ? CURRENT_USER : task.assignee;
-
     document.querySelectorAll(".priority-btn").forEach((btn) => {
         btn.classList.remove("active", "high", "medium", "low");
         if (btn.dataset.priority === task.priority) {
@@ -443,28 +445,30 @@ function showTaskDetail(task) {
         }
     });
 
+    // 保存ボタンのイベントリスナーを設定（編集用）
+    const saveTaskBtn = document.getElementById("saveTaskBtn");
+    saveTaskBtn.addEventListener("click", editTask);
+
     openModal("taskDetailModal");
 }
 
 /**
- * タスクを保存（AI解析を実行してからデータベースに保存）
- * 1. ユーザー入力をAI解析APIに送信
- * 2. AI解析結果とユーザーの手動入力をマージ
+ * 新規タスクを作成（AI解析あり）
+ * 1. ユーザー入力をAI解析
+ * 2. 解析結果とユーザーの手動入力をマージ
  * 3. データベースに保存
- * @async
  */
-async function saveTask() {
-    // ★★★関数の責務分離を行う
+async function createNewTask() {
     if (!currentTask) return;
 
-    // ユーザー入力を取得
+    // 入力チェック
     const textInput = document.getElementById("textInputField").value.trim();
     if (!textInput) {
         alert("タスク名を入力してください");
         return;
     }
 
-    // 保存ボタンを無効化して解析中のメッセージを表示
+    // ボタンを「解析中...」に変更
     const saveBtn = document.getElementById("saveTaskBtn");
     saveBtn.disabled = true;
     saveBtn.textContent = "解析中...";
@@ -486,7 +490,6 @@ async function saveTask() {
         // AI解析APIのレスポンス(JSON)を取得
         // 例: { success: true, message: "...", data: {...} }
         const result = await response.json();
-        console.log("result:", result);
 
         if (!result.success) {
             alert("エラー: " + (result.message || "AI解析に失敗しました"));
@@ -496,50 +499,33 @@ async function saveTask() {
         // APIレスポンスの data 部分だけを取り出す(dataにAIが解析したタスク情報が入っている)
         // 例: { aiTask: "...", date: "...", assignee: "...", priority: "..." }
         const parsedTask = result.data;
-        console.log("parsedTask:", parsedTask);
 
-        // 解析結果をcurrentTaskオブジェクトに上書き
+        // AI解析結果をcurrentTaskに反映
         currentTask.textInput = textInput;
         currentTask.aiTask = parsedTask.aiTask || textInput;
         currentTask.date = parsedTask.date || "指定なし";
         currentTask.assignee = parsedTask.assignee || "指定なし";
         currentTask.priority = parsedTask.priority || "指定なし";
 
-        // 日付欄の値を取得し、currentTaskオブジェクトのdateを上書きする処理
+        // ユーザーの手動入力で上書き(日付、担当者、優先度)
         const manualDate = document.getElementById("detailDate").textContent;
         if (manualDate && manualDate !== "指定なし") {
             currentTask.date = manualDate;
         }
 
-        // 担当者欄の値を取得し、currentTaskオブジェクトのassigneeを上書きする処理
         const manualAssignee =
             document.getElementById("detailAssignee").textContent;
         if (manualAssignee) {
             currentTask.assignee = manualAssignee;
         }
 
-        // 優先度欄の値を取得し、currentTaskオブジェクトのpriorityを上書きする処理
         const manualPriority = document.querySelector(".priority-btn.active")
             ?.dataset.priority;
         if (manualPriority) {
             currentTask.priority = manualPriority;
         }
 
-        // データベースに保存するためのボディデータを作成
-        const bodyData = {
-            ai_task: currentTask.aiTask,
-            text_input: currentTask.textInput,
-            date: currentTask.date,
-            assignee: currentTask.assignee,
-            priority: currentTask.priority,
-        };
-
-        // タスクIDが存在する場合はそれをボディデータに追加(編集時)
-        if (currentTask.id) {
-            bodyData.id = currentTask.id;
-        }
-
-        // データベースに保存するためのAPIにリクエストを送信
+        // 新規作成APIにリクエストを送信
         const saveResponse = await fetch("/api/tasks", {
             method: "POST",
             headers: {
@@ -547,26 +533,120 @@ async function saveTask() {
                 "X-CSRF-TOKEN": csrfToken,
                 Accept: "application/json",
             },
-            body: JSON.stringify(bodyData),
+            body: JSON.stringify({
+                ai_task: currentTask.aiTask,
+                text_input: currentTask.textInput,
+                date: currentTask.date,
+                assignee: currentTask.assignee,
+                priority: currentTask.priority,
+            }),
         });
 
-        // データベースに保存するためのAPIのレスポンスをJSONとして取得
+        // 新規作成APIのレスポンス(JSON)を取得
         const saveResult = await saveResponse.json();
 
+        // エラー
         if (!saveResult.success) {
-            alert("保存に失敗しました:" + (saveResult.message || ""));
+            alert("作成に失敗しました: " + (saveResult.message || ""));
             return;
         }
 
-        // モーダルを閉じる
+        // 成功時はモーダルを閉じる
         closeModal("taskDetailModal");
 
-        // // ★★★タスク一覧を更新
-        // loadTasks();
+        // タスク一覧を更新 ※currentTaskListを更新
+        await filterTasks(currentFilter);
     } catch (error) {
         alert("エラー: " + error.message);
     } finally {
-        // 保存ボタンを有効化して保存中のメッセージを非表示にする
+        saveBtn.disabled = false;
+        saveBtn.textContent = "保存";
+    }
+}
+
+/**
+ * 既存タスクを編集（AI解析なし）
+ * 1. ユーザーの手動入力を取得
+ * 2. データベースに保存
+ */
+async function editTask() {
+    if (!currentTask || !currentTask.id) return;
+
+    // 入力チェック
+    const textInput = document.getElementById("textInputField").value.trim();
+    if (!textInput) {
+        alert("タスク名を入力してください");
+        return;
+    }
+
+    const saveBtn = document.getElementById("saveTaskBtn");
+    saveBtn.disabled = true;
+    saveBtn.textContent = "保存中...";
+    try {
+        // currentTaskを更新
+        currentTask.textInput = textInput;
+        currentTask.aiTask = textInput; // 編集時はテキスト入力をそのまま使用
+
+        // ユーザーの手動入力を取得
+        const manualDate = document.getElementById("detailDate").textContent;
+        currentTask.date = manualDate || "指定なし";
+
+        const manualAssignee =
+            document.getElementById("detailAssignee").textContent;
+        currentTask.assignee = manualAssignee || "指定なし";
+
+        const manualPriority = document.querySelector(".priority-btn.active")
+            ?.dataset.priority;
+        currentTask.priority = manualPriority || "指定なし";
+
+        // 編集APIにリクエストを送信
+        const saveResponse = await fetch(`/api/tasks/${currentTask.id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": csrfToken,
+                Accept: "application/json",
+            },
+            body: JSON.stringify({
+                ai_task: currentTask.aiTask,
+                text_input: currentTask.textInput,
+                date: currentTask.date,
+                assignee: currentTask.assignee,
+                priority: currentTask.priority,
+            }),
+        });
+        const saveResult = await saveResponse.json();
+        if (!saveResult.success) {
+            alert("更新に失敗しました: " + (saveResult.message || ""));
+            return;
+        }
+        // モーダルを閉じる
+        closeModal("taskDetailModal");
+
+        // currentTaskListの該当タスクを更新
+        const editTaskIndex = currentTaskList.findIndex(
+            (t) => t.id === currentTask.id,
+        );
+        if (editTaskIndex !== -1) {
+            currentTaskList[editTaskIndex] = {
+                ...currentTaskList[editTaskIndex],
+                aiTask: currentTask.aiTask,
+                textInput: currentTask.textInput,
+                date: currentTask.date,
+                assignee: currentTask.assignee,
+                priority: currentTask.priority,
+            };
+        }
+
+        // 画面を再描画
+        const container = document.getElementById("taskListContainer");
+        const isCompleted = currentFilter === "completed";
+        container.innerHTML = currentTaskList
+            .map((task) => renderTaskItem(task, isCompleted))
+            .join("");
+    } catch (error) {
+        alert("エラー: " + error.message);
+    } finally {
         saveBtn.disabled = false;
         saveBtn.textContent = "保存";
     }
@@ -697,17 +777,6 @@ function executeCompleteTask() {
     closeModal("taskDetailModal");
 }
 
-/**
- * タスクIDから該当タスクを検索して詳細表示
- * @param {number} taskId - 編集対象のタスクID
- */
-function editTask(taskId) {
-    const task = currentTaskList.find((t) => t.id === taskId);
-    if (task) {
-        showTaskDetail(task);
-    }
-}
-
 //==============================================================================
 // 7. タスク一覧描画
 //==============================================================================
@@ -784,7 +853,7 @@ function renderTaskItem(task, isCompleted = false) {
     const checkboxContent = isCompleted ? '<i class="fas fa-check"></i>' : "";
 
     return `
-        <div class="task-item ${completedClass}" onclick="editTask(${task.id})">
+        <div class="task-item ${completedClass}" onclick="openTaskDetailModal(${task.id})">
             ${isCompleted ? renderCompletedInfo(task, checkboxContent, getPriorityClass(task.priority)) : ""}
             <div class="task-item-top">
                 ${!isCompleted ? `<div class="task-checkbox ${getPriorityClass(task.priority)}">${checkboxContent}</div>` : ""}
@@ -835,152 +904,6 @@ function renderCompletedInfo(task, checkboxContent, priorityClass) {
     `;
 }
 
-/**
- * 未割当タスクをグループ分けして表示
- * 「担当者なし」と「優先度なし」の2グループに分類
- * @param {Array<Object>} tasks - 表示するタスクの配列
- * @param {HTMLElement} container - 表示先のDOM要素
- */
-function renderUnassignedTasks(tasks, container) {
-    if (tasks.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-clipboard-list"></i>
-                <p>未割当のタスクがありません</p>
-            </div>
-        `;
-        return;
-    }
-
-    const noAssignee = tasks.filter((t) => t.assignee === "指定なし");
-    const noPriority = tasks.filter(
-        (t) => t.priority === "指定なし" && t.assignee !== "指定なし",
-    );
-
-    let html = "";
-
-    if (noAssignee.length > 0) {
-        html += `
-            <div class="task-group">
-                <div class="task-group-header">
-                    <span class="task-group-title">担当者なし</span>
-                    <span class="task-group-count">${noAssignee.length}</span>
-                </div>
-                <div class="task-group-items">
-                    ${noAssignee.map((task) => renderTaskItem(task)).join("")}
-                </div>
-            </div>
-        `;
-    }
-
-    if (noPriority.length > 0) {
-        html += `
-            <div class="task-group">
-                <div class="task-group-header">
-                    <span class="task-group-title">優先度なし</span>
-                    <span class="task-group-count">${noPriority.length}</span>
-                </div>
-                <div class="task-group-items">
-                    ${noPriority.map((task) => renderTaskItem(task)).join("")}
-                </div>
-            </div>
-        `;
-    }
-
-    container.innerHTML = html;
-}
-
-/**
- * 完了済みタスクを完了日時でグループ分けして表示
- * @param {Array<Object>} tasks - 完了済みタスクの配列
- * @param {HTMLElement} container - 表示先のDOM要素
- */
-function renderCompletedTasks(tasks, container) {
-    if (tasks.length === 0) {
-        container.innerHTML = `
-            <div class="empty-state">
-                <i class="fas fa-clipboard-list"></i>
-                <p>完了済みのタスクがありません</p>
-            </div>
-        `;
-        return;
-    }
-
-    const groupedTasks = groupTasksByCompletedDate(tasks);
-
-    let html = "";
-    Object.keys(groupedTasks).forEach((dateKey) => {
-        const tasksInGroup = groupedTasks[dateKey];
-        html += `
-            <div class="task-group">
-                <div class="task-group-header">
-                    <span class="task-group-title">${dateKey}</span>
-                    <span class="task-group-count">${tasksInGroup.length}</span>
-                </div>
-                <div class="task-group-items">
-                    ${tasksInGroup.map((task) => renderTaskItem(task, true)).join("")}
-                </div>
-            </div>
-        `;
-    });
-
-    container.innerHTML = html;
-}
-
-/**
- * 完了日時でタスクをグループ分け
- * @param {Array<Object>} tasks - 完了済みタスクの配列
- * @returns {Object} 日付キーをキーとし、タスク配列を値とするオブジェクト
- */
-function groupTasksByCompletedDate(tasks) {
-    const today = new Date();
-    const tomorrow = new Date(today);
-    tomorrow.setDate(today.getDate() + 1);
-
-    const groups = {};
-
-    tasks.forEach((task) => {
-        if (!task.completedAt) return;
-
-        const completedDate = new Date(task.completedAt);
-        const dateKey = getDateGroupKey(completedDate, today, tomorrow);
-
-        if (!groups[dateKey]) {
-            groups[dateKey] = [];
-        }
-        groups[dateKey].push(task);
-    });
-
-    Object.keys(groups).forEach((key) => {
-        groups[key].sort(
-            (a, b) => new Date(b.completedAt) - new Date(a.completedAt),
-        );
-    });
-
-    return groups;
-}
-
-/**
- * 日付を「今日」「明日」「M月D日」形式のキーに変換
- * @param {Date} date - 変換対象の日付
- * @param {Date} today - 今日の日付
- * @param {Date} tomorrow - 明日の日付
- * @returns {string} 日付グループのキー文字列
- */
-function getDateGroupKey(date, today, tomorrow) {
-    const dateStr = date.toDateString();
-    const todayStr = today.toDateString();
-    const tomorrowStr = tomorrow.toDateString();
-
-    if (dateStr === todayStr) {
-        return "今日";
-    } else if (dateStr === tomorrowStr) {
-        return "明日";
-    } else {
-        return `${date.getMonth() + 1}月${date.getDate()}日`;
-    }
-}
-
 //==============================================================================
 // 8. メンバー選択
 //==============================================================================
@@ -1003,7 +926,7 @@ function renderMemberList() {
 
     memberList.innerHTML = MEMBERS.map(
         (member) => `
-            <div class="member-item" onclick="selectMember(${member.id})">
+            <div class="member-item" onclick="selectMemberInMemberSelectModal(${member.id})">
                 <div class="member-avatar">${member.name.charAt(0)}</div>
                 <div class="member-name">${member.name}</div>
                 <div class="member-check ${selectedMember === member.id ? "selected" : ""}">
@@ -1018,7 +941,9 @@ function renderMemberList() {
  * メンバーを選択状態にする
  * @param {number} memberId - 選択するメンバーのID
  */
-function selectMember(memberId) {
+// ★★★ inline onclick を辞める必要がある
+// eslint-disable-next-line no-unused-vars
+function selectMemberInMemberSelectModal(memberId) {
     selectedMember = memberId;
     renderMemberList();
 }
@@ -1026,7 +951,7 @@ function selectMember(memberId) {
 /**
  * 選択中のメンバーをタスクの担当者フィールドに適用
  */
-function applyMember() {
+function applyMemberInMemberSelectModal() {
     if (selectedMember) {
         const member = MEMBERS.find((m) => m.id === selectedMember);
         if (member) {
@@ -1159,16 +1084,16 @@ function selectShortcut(type) {
             selectedDate = new Date(today);
             selectedDate.setDate(today.getDate() + 1);
             break;
-        case "weekend":
-            selectedDate = new Date(today);
+        case "weekend": {
             const daysUntilSaturday = (6 - today.getDay() + 7) % 7 || 7;
             selectedDate.setDate(today.getDate() + daysUntilSaturday);
             break;
-        case "nextWeek":
-            selectedDate = new Date(today);
+        }
+        case "nextWeek": {
             const daysUntilNextMonday = (8 - today.getDay()) % 7 || 7;
             selectedDate.setDate(today.getDate() + daysUntilNextMonday);
             break;
+        }
     }
 
     currentYear = selectedDate.getFullYear();
