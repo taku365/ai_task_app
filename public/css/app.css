@@ -471,6 +471,10 @@ body {
     transition: all 0.3s;
 }
 
+.complete-btn.hidden {
+    display: none;
+}
+
 .complete-btn:hover {
     background-color: #f8f9fa;
 }

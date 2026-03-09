@@ -417,6 +417,9 @@ function openNewTaskModal() {
         btn.classList.remove("active", "high", "medium", "low");
     });
 
+    // 完了ボタンを非表示にする（新規作成時）
+    document.getElementById("completeTaskBtn").classList.add("hidden");
+
     // 保存ボタンのイベントリスナーを設定（新規作成用）
     const saveTaskBtn = document.getElementById("saveTaskBtn");
     saveTaskBtn.addEventListener("click", createNewTask);
