@@ -23,6 +23,9 @@ class Task extends Model
         'assignee_id',
         'priority_id',
         'created_by_id',
+        'completed_flg',
+        'completed_at',
+        'completed_by_id'
     ];
 
     // リレーション:テーブル同士の関係を表すもの

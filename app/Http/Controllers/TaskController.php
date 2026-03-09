@@ -15,22 +15,23 @@ class TaskController extends Controller
     private function getFilteredTasks(User $currentUser, string $filter)
     {
         // タスク取得用のクエリビルダを作成
-        $query = Task::with(['assignee', 'priority', 'createdBy'])
-            ->orderBy('created_at', 'desc');
+        $query = Task::with(['assignee', 'priority', 'createdBy', 'completedBy']);
 
         // filter の値に応じて検索条件を追加
         switch ($filter) {
             // 自分が担当しているタスク
             case 'self':
                 $query->where('assignee_id', $currentUser->id)
-                    ->whereNull('completed_at');
+                    ->whereNull('completed_at')
+                    ->orderBy('created_at', 'desc');
                 break;
 
             // 他メンバーが担当しているタスク
             case 'member':
                 $query->where('assignee_id', '!=', $currentUser->id)
                     ->whereNotNull('assignee_id')
-                    ->whereNull('completed_at');
+                    ->whereNull('completed_at')
+                    ->orderBy('created_at', 'desc');
                 break;
 
             // 担当者が未割当のタスク
@@ -39,12 +40,14 @@ class TaskController extends Controller
                     $q->whereNull('assignee_id')
                         ->orWhereNull('priority_id')
                         ->orWhereNull('due_date');
-                })->whereNull('completed_at');
+                })->whereNull('completed_at')
+                    ->orderBy('created_at', 'desc');
                 break;
 
             // 完了済みのタスク
             case 'completed':
-                $query->whereNotNull('completed_at');
+                $query->whereNotNull('completed_at')
+                    ->orderBy('completed_at', 'desc');
                 break;
         }
 
