@@ -1131,6 +1131,7 @@ function createDayCell(day, date, isOtherMonth) {
     today.setHours(0, 0, 0, 0);
     date.setHours(0, 0, 0, 0);
 
+    // 日付のみで比較する
     const isToday = date.getTime() === today.getTime();
     const isSelected =
         selectedDate && date.getTime() === selectedDate.getTime();
@@ -1147,35 +1148,37 @@ function createDayCell(day, date, isOtherMonth) {
 }
 
 /**
- * 日付ショートカット（今日、明日、週末、来週）を選択
- * @param {string} type - ショートカットの種類（"today", "tomorrow", "weekend", "nextWeek"）
+ * 日付ショートカットを選択する関数
+ * today / tomorrow / weekend / nextWeek の種類に応じて selectedDate を更新する
  */
 function selectShortcut(type) {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    // 今日の日付を取得
+    const date = new Date();
+    // 時刻を 00:00:00 にリセット（時間のズレを防ぐため）
+    date.setHours(0, 0, 0, 0);
 
-    switch (type) {
-        case "today":
-            selectedDate = today;
-            break;
-        case "tomorrow":
-            selectedDate = new Date(today);
-            selectedDate.setDate(today.getDate() + 1);
-            break;
-        case "weekend": {
-            const daysUntilSaturday = (6 - today.getDay() + 7) % 7 || 7;
-            selectedDate.setDate(today.getDate() + daysUntilSaturday);
-            break;
-        }
-        case "nextWeek": {
-            const daysUntilNextMonday = (8 - today.getDay()) % 7 || 7;
-            selectedDate.setDate(today.getDate() + daysUntilNextMonday);
-            break;
-        }
+    if (type === "today") {
+        // baseがすでに'今日'なので何もしない
     }
 
-    currentYear = selectedDate.getFullYear();
-    currentMonth = selectedDate.getMonth();
+    if (type === "tomorrow") {
+        date.setDate(date.getDate() + 1);
+    }
+
+    if (type === "weekend") {
+        const diff = (5 - date.getDay() + 7) % 7;
+        date.setDate(date.getDate() + diff);
+    }
+
+    if (type === "nextWeek") {
+        const diff = (8 - date.getDay()) % 7 || 7;
+        date.setDate(date.getDate() + diff);
+    }
+
+    selectedDate = date;
+    currentYear = date.getFullYear();
+    currentMonth = date.getMonth();
+
     renderCalendar();
 }
 
