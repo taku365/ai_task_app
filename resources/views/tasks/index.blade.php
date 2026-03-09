@@ -14,12 +14,18 @@
             </div>
         </div>
 
+        @php
+            $currentFilter = request()->query('filter', 'self');
+        @endphp
+
         <!-- フィルタータブ -->
-        <div class="filter-tabs">
-            <button class="filter-tab active" data-filter="self">自分</button>
-            <button class="filter-tab" data-filter="member">メンバー</button>
-            <button class="filter-tab" data-filter="unassigned">未割当</button>
-            <button class="filter-tab" data-filter="completed">完了済み</button>
+        <div class="filter-tabs" data-filter="{{ $currentFilter }}">
+            <button class="filter-tab {{ $currentFilter === 'self' ? 'active' : '' }}" data-filter="self">自分</button>
+            <button class="filter-tab {{ $currentFilter === 'member' ? 'active' : '' }}" data-filter="member">メンバー</button>
+            <button class="filter-tab {{ $currentFilter === 'unassigned' ? 'active' : '' }}"
+                data-filter="unassigned">未割当</button>
+            <button class="filter-tab {{ $currentFilter === 'completed' ? 'active' : '' }}"
+                data-filter="completed">完了済み</button>
         </div>
 
         <!-- タスクリスト -->

@@ -152,6 +152,13 @@ function transformTaskData(dbTask) {
  */
 document.addEventListener("DOMContentLoaded", () => {
     setupEventListeners();
+
+    // Bladeからフィルタを取得
+    const filterTabsContainer = document.querySelector(".filter-tabs");
+    const filter = filterTabsContainer?.dataset.filter || "self";
+
+    // 初期表示: 取得したフィルタでタスク一覧を表示
+    filterTasks(filter);
 });
 
 //==============================================================================
@@ -252,12 +259,9 @@ function setupEventListeners() {
         deleteTaskBtn.addEventListener("click", deleteTask);
     }
 
+    // クリックしたフィルタを検知して、filterTasksを実行
     document.querySelectorAll(".filter-tab").forEach((tab) => {
         tab.addEventListener("click", (e) => {
-            document
-                .querySelectorAll(".filter-tab")
-                .forEach((t) => t.classList.remove("active"));
-            e.target.classList.add("active");
             const filter = e.target.dataset.filter;
             filterTasks(filter);
         });
@@ -853,7 +857,21 @@ function getPriorityClass(priority) {
  * @async
  */
 async function filterTasks(filter) {
+    // 現在のフィルタ変数を更新
     currentFilter = filter;
+
+    // URLを更新（リロード時に状態を保持するため）
+    const url = new URL(window.location);
+    url.searchParams.set("filter", filter); // URLのクエリパラメータfilterに変数のfilterをセットする
+    window.history.pushState({}, "", url); // ブラウザを再読み込みせず、表示中のURLだけ書き換える
+
+    // タブのactive状態を更新（画面の見た目)
+    document.querySelectorAll(".filter-tab").forEach((tab) => {
+        tab.classList.remove("active");
+        if (tab.dataset.filter === filter) {
+            tab.classList.add("active");
+        }
+    });
 
     try {
         // タスク一覧取得APIにリクエストを送信（フィルター条件付き）
@@ -865,9 +883,9 @@ async function filterTasks(filter) {
 
         // APIレスポンス(JSON)を取得
         const data = await response.json();
-        // レスポンスの tasks 配列を取り出し、画面表示用データに変換
+        // - レスポンスの tasks 配列を取り出し、画面表示用データに変換
         const transformedTasks = data.tasks.map(transformTaskData);
-        // currentTaskListに保持する
+        // - currentTaskListに保持する
         currentTaskList = transformedTasks;
 
         // タスク一覧を描画するコンテナを取得
