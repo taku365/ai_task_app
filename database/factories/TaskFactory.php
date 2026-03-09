@@ -30,7 +30,7 @@ class TaskFactory extends Factory
         $selectedTask = fake()->randomElement($taskPairs);
 
         return [
-            'input_text' => $selectedTask['input'],
+            'text_input' => $selectedTask['input'],
             'ai_task' => $selectedTask['ai'],
             'due_date' => fake()->optional(0.7)->dateTimeBetween('now', '+30 days'),
             'assignee_id' => null,
