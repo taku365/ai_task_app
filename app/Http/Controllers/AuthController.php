@@ -24,9 +24,13 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
+        // チェックボックスの値を取得（ON なら true)
+        $remember = $request->boolean('remember');
+
         // ログイン試行
         // Auth::attempt() : データベースのユーザー情報とメールアドレスとパスワード（ハッシュ化）が一致していたらtrueを返す
-        if (Auth::attempt($credentials)) {
+        // 第二引数に true / falseを指定することで、ログイン情報を保持するかどうかを指定できる
+        if (Auth::attempt($credentials, $remember)) {
             // ログイン成功
             // session()->regenerate() : セッションIDを再生成する（セキュリティ対策）
             $request->session()->regenerate();
