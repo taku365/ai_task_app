@@ -21,3 +21,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [TaskController::class, 'index'])->name('tasks.index');
     Route::get('/settings',  [TaskController::class, 'settings'])->name('tasks.settings');
 });
+
+Route::get('/register', function () {
+    return view('auth.register');
+})->name('register');
