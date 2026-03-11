@@ -11,6 +11,12 @@ Route::middleware('guest')->group(function () {
 
     // ログイン処理（フォーム送信時）
     Route::post('/login', [AuthController::class, 'login']);
+
+    // 新規登録画面の表示
+    Route::get('/register', [AuthController::class, 'showRegisterForm'])->name('register');
+
+    // 新規登録処理（フォーム送信時）
+    Route::post('/register', [AuthController::class, 'register']);
 });
 
 // ログアウト処理 (ログイン済みの人だけ)
@@ -21,7 +27,3 @@ Route::middleware('auth')->group(function () {
     Route::get('/', [TaskController::class, 'index'])->name('tasks.index');
     Route::get('/settings',  [TaskController::class, 'settings'])->name('tasks.settings');
 });
-
-Route::get('/register', function () {
-    return view('auth.register');
-})->name('register');

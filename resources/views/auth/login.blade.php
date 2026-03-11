@@ -72,7 +72,7 @@
                 <!-- 新規登録リンク -->
                 <div class="auth-footer">
                     <p>アカウントをお持ちでない方</p>
-                    <a href="#" class="auth-link-primary">
+                    <a href="{{ route('register') }}" class="auth-link-primary">
                         新規登録はこちら
                     </a>
                 </div>

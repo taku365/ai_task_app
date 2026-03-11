@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 // Laravelの認証機能を利用するFacade
 use Illuminate\Support\Facades\Auth;
+use App\Models\User;
 
 class AuthController extends Controller
 {
@@ -57,5 +58,37 @@ class AuthController extends Controller
 
         // ログイン画面にリダイレクト
         return redirect()->route('login');
+    }
+
+
+    // 新規登録画面を表示するメソッド
+    public function showRegisterForm()
+    {
+        return view('auth.register');
+    }
+
+    // 新規登録処理を行うメソッド
+    public function register(Request $request)
+    {
+        // バリデーションチェック（入力チェック）
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:50'],
+            'email' => ['required', 'string', 'email', 'max:255', 'unique:ai_tasks_M_users'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        // ユーザーを作成
+        $user = User::create([
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => $validated['password'],
+            'active_flg' => true,
+        ]);
+
+        // 作成したユーザーで自動ログイン
+        Auth::login($user);
+
+        // トップページにリダイレクト
+        return redirect()->route('tasks.index');
     }
 }

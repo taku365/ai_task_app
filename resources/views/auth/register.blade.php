@@ -12,15 +12,29 @@
             </div>
 
             <!-- 登録フォーム -->
-            <form method="POST" action="#" class="auth-form">
+            <form method="POST" action="{{ route('register') }}" class="auth-form">
+                @csrf
+
+                <!-- エラーメッセージ表示 -->
+                @if ($errors->any())
+                    <div class="auth-error">
+                        <i class="fas fa-exclamation-circle"></i>
+                        <div class="auth-error-content">
+                            @foreach ($errors->all() as $error)
+                                <p>{{ $error }}</p>
+                            @endforeach
+                        </div>
+                    </div>
+                @endif
+
                 <!-- ユーザー名 -->
                 <div class="auth-field">
                     <label for="name" class="auth-label">
                         <i class="fas fa-user"></i>
                         <span>ユーザー名</span>
                     </label>
-                    <input type="text" id="name" name="name" class="auth-input" placeholder="山田太郎" required
-                        autofocus maxlength="50">
+                    <input type="text" id="name" name="name" class="auth-input" value="{{ old('name') }}"
+                        placeholder="山田太郎" required autofocus maxlength="50">
                 </div>
 
                 <!-- メールアドレス -->
@@ -29,8 +43,8 @@
                         <i class="fas fa-envelope"></i>
                         <span>メールアドレス</span>
                     </label>
-                    <input type="email" id="email" name="email" class="auth-input" placeholder="example@example.com"
-                        required>
+                    <input type="email" id="email" name="email" class="auth-input" value="{{ old('name') }}"
+                        placeholder="example@example.com" required>
                 </div>
 
                 <!-- パスワード -->
