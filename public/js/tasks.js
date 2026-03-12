@@ -969,6 +969,9 @@ function renderTaskItem(task, isCompleted = false) {
     const completedClass = isCompleted ? "completed-task" : "";
     const checkboxContent = isCompleted ? '<i class="fas fa-check"></i>' : "";
 
+    // 時間がある場合は日付と時間を表示、ない場合は日付のみ
+    const dateTimeDisplay = task.time ? `${task.date} ${task.time}` : task.date;
+
     return `
         <div class="task-item ${completedClass}" onclick="openTaskDetailModal(${task.id})">
             ${isCompleted ? renderCompletedInfo(task, checkboxContent, getPriorityClass(task.priority)) : ""}
@@ -979,7 +982,7 @@ function renderTaskItem(task, isCompleted = false) {
             <div class="task-meta">
                 <div class="task-meta-item">
                     <i class="far fa-calendar"></i>
-                    <span>${task.date}</span>
+                    <span>${dateTimeDisplay}</span>
                 </div>
                 <div class="task-meta-item">
                     <i class="far fa-user"></i>
