@@ -256,11 +256,40 @@
                 </div>
             </div>
 
+            <!-- 時間選択エリア（初期非表示） -->
+            <div class="time-picker-container" id="timePickerContainer" style="display: none;">
+                <div class="time-picker-header">
+                    <span>時間を選択</span>
+                    <button class="time-clear-btn" id="timeClearBtn">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="time-picker-selectors">
+                    <div class="time-selector">
+                        <label>時</label>
+                        <select id="hourSelect" class="time-select">
+                            <option value="">--</option>
+                        </select>
+                    </div>
+                    <div class="time-separator">:</div>
+                    <div class="time-selector">
+                        <label>分</label>
+                        <select id="minuteSelect" class="time-select">
+                            <option value="">--</option>
+                            <option value="00">00</option>
+                            <option value="15">15</option>
+                            <option value="30">30</option>
+                            <option value="45">45</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+
             <!-- アクション -->
             <div class="date-select-actions">
                 <button class="time-btn" id="timeBtn">
                     <i class="far fa-clock"></i>
-                    <span>時間を選択</span>
+                    <span id="timeBtnText">時間を選択</span>
                 </button>
                 <button class="clear-date-btn" id="clearDateBtn">クリア</button>
                 <button class="save-date-btn" id="saveDateBtn">保存</button>

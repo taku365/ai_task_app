@@ -880,6 +880,87 @@ body {
     color: #bdc3c7;
 }
 
+/* 時間ピッカー */
+.time-picker-container {
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+}
+
+.time-picker-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+}
+
+.time-picker-header span {
+    font-size: 14px;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.time-clear-btn {
+    background: none;
+    border: none;
+    color: #7f8c8d;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 4px 8px;
+    transition: color 0.2s;
+}
+
+.time-clear-btn:hover {
+    color: #e74c3c;
+}
+
+.time-picker-selectors {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+}
+
+.time-selector {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.time-selector label {
+    font-size: 12px;
+    color: #7f8c8d;
+    font-weight: 500;
+}
+
+.time-select {
+    width: 80px;
+    padding: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    text-align: center;
+    border: 2px solid #e0e0e0;
+    border-radius: 12px;
+    background-color: #fff;
+    color: #2c3e50;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.time-select:focus {
+    outline: none;
+    border-color: #e74c3c;
+}
+
+.time-separator {
+    font-size: 24px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-top: 20px;
+}
+
 .date-select-actions {
     display: flex;
     gap: 12px;
@@ -899,6 +980,17 @@ body {
     font-size: 14px;
     color: #7f8c8d;
     cursor: pointer;
+    transition: all 0.2s;
+}
+
+.time-btn:hover {
+    background-color: #f8f9fa;
+}
+
+.time-btn.active {
+    background-color: #fff5f5;
+    border-color: #e74c3c;
+    color: #e74c3c;
 }
 
 .clear-date-btn {
@@ -910,6 +1002,11 @@ body {
     font-weight: 600;
     color: #7f8c8d;
     cursor: pointer;
+    transition: all 0.2s;
+}
+
+.clear-date-btn:hover {
+    background-color: #f8f9fa;
 }
 
 .save-date-btn {
@@ -921,6 +1018,11 @@ body {
     font-size: 14px;
     font-weight: 600;
     cursor: pointer;
+    transition: all 0.2s;
+}
+
+.save-date-btn:hover {
+    background-color: #c0392b;
 }
 
 /* 設定画面 */
