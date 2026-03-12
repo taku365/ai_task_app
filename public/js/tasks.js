@@ -1128,6 +1128,24 @@ function initializeTimePicker() {
 }
 
 /**
+ * 時間ピッカーの表示/非表示を切り替え
+ */
+function toggleTimePicker() {
+    const timePickerContainer = document.getElementById("timePickerContainer");
+    const timeBtn = document.getElementById("timeBtn");
+
+    if (!timePickerContainer) return;
+
+    if (timePickerContainer.style.display === "none") {
+        timePickerContainer.style.display = "block";
+        if (timeBtn) timeBtn.classList.add("active");
+    } else {
+        timePickerContainer.style.display = "none";
+        if (timeBtn) timeBtn.classList.remove("active");
+    }
+}
+
+/**
  * カレンダーを描画
  * 前月・当月・次月の日付を含む6週間分のカレンダーグリッドを生成
  */
