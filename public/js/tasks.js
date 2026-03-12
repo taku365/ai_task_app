@@ -445,7 +445,10 @@ function openNewTaskModal() {
 
     // 画面表示（初期）
     document.getElementById("textInputField").value = "";
+    const detailDate = document.getElementById("detailDate");
     document.getElementById("detailDate").textContent = "指定なし";
+    detailDate.dataset.date = "";
+    detailDate.dataset.time = "";
     document.getElementById("detailAssignee").textContent = CURRENT_USER;
     document.querySelectorAll(".priority-btn").forEach((btn) => {
         btn.classList.remove("active", "high", "medium", "low");
