@@ -1168,6 +1168,20 @@ function updateTimeSelection() {
 }
 
 /**
+ * 時間選択をクリア
+ */
+function clearTimeSelection() {
+    const hourSelect = document.getElementById("hourSelect");
+    const minuteSelect = document.getElementById("minuteSelect");
+
+    if (hourSelect) hourSelect.value = "";
+    if (minuteSelect) minuteSelect.value = "";
+
+    selectedTime = null;
+    updateTimeBtnText();
+}
+
+/**
  * カレンダーを描画
  * 前月・当月・次月の日付を含む6週間分のカレンダーグリッドを生成
  */
