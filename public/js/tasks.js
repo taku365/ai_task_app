@@ -1358,7 +1358,8 @@ function saveDateSelection() {
         const detailDate = document.getElementById("detailDate");
         if (detailDate) {
             detailDate.textContent = formatted;
-            detailDate.dataset.date = `${year}年${month}月${day}日`;
+            // 日付と時間を分離（API送信用）
+            detailDate.dataset.date = `${month}月${day}日`;
             detailDate.dataset.time = selectedTime || "";
         }
     }
@@ -1370,9 +1371,13 @@ function saveDateSelection() {
  */
 function clearDateSelection() {
     selectedDate = null;
+    selectedTime = null;
     const detailDate = document.getElementById("detailDate");
     if (detailDate) {
         detailDate.textContent = "指定なし";
+        // API送信時に空のデータを送るため
+        detailDate.dataset.date = "";
+        detailDate.dataset.time = "";
     }
     closeModal("dateSelectModal");
 }
