@@ -88,17 +88,16 @@ let alertCallback = null;
 /**
  * データベースの日付形式を日本語の年月日形式に変換
  * @param {string|null} dateString - YYYY-MM-DD HH:MM:SS形式の日付文字列
- * @returns {string} YYYY年MM月DD日形式の文字列、またはnullの場合は「指定なし」
+ * @returns {string} MM月DD日形式の文字列、またはnullの場合は「指定なし」
  */
 function formatDate(dateString) {
     if (!dateString) return "指定なし";
 
     const date = new Date(dateString);
-    const year = date.getFullYear();
     const month = date.getMonth() + 1;
     const day = date.getDate();
 
-    return `${year}年${month}月${day}日`;
+    return `${month}月${day}日`;
 }
 
 /**
@@ -1385,20 +1384,23 @@ function changeMonth(delta) {
  */
 function saveDateSelection() {
     if (selectedDate) {
+        const year = selectedDate.getFullYear();
         const month = selectedDate.getMonth() + 1;
         const day = selectedDate.getDate();
-        let formatted = `${month}月${day}日`;
+
+        // 表示形式（MM月DD日）
+        let formattedDate = `${month}月${day}日`;
 
         // 時間が選択されている場合は追加
         if (selectedTime) {
-            formatted += ` ${selectedTime}`;
+            formattedDate += ` ${selectedTime}`;
         }
 
         const detailDate = document.getElementById("detailDate");
         if (detailDate) {
-            detailDate.textContent = formatted;
+            detailDate.textContent = formattedDate;
             // 日付と時間を分離（API送信用）
-            detailDate.dataset.date = `${month}月${day}日`;
+            detailDate.dataset.date = `${year}年${month}月${day}日`;
             detailDate.dataset.time = selectedTime || "";
         }
     }
