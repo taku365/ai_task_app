@@ -1146,6 +1146,28 @@ function toggleTimePicker() {
 }
 
 /**
+ * 時間選択を更新
+ * 時と分の両方が選択されている場合のみ selectedTime を更新
+ */
+function updateTimeSelection() {
+    const hourSelect = document.getElementById("hourSelect");
+    const minuteSelect = document.getElementById("minuteSelect");
+
+    if (!hourSelect || !minuteSelect) return;
+
+    const hour = hourSelect.value;
+    const minute = minuteSelect.value;
+
+    if (hour && minute) {
+        selectedTime = `${hour}:${minute}`;
+    } else {
+        selectedTime = null;
+    }
+
+    updateTimeBtnText();
+}
+
+/**
  * カレンダーを描画
  * 前月・当月・次月の日付を含む6週間分のカレンダーグリッドを生成
  */
