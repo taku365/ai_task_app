@@ -58,6 +58,12 @@ let currentTaskList = [];
 let selectedDate = null;
 
 /**
+ * 日付選択モーダルで選択された時間
+ * @type {string|null} "HH:MM" 形式 (例: "11:30") または null
+ */
+let selectedTime = null;
+
+/**
  * カレンダー表示中の年
  * @type {number}
  */
@@ -309,6 +315,30 @@ function setupEventListeners() {
     const clearDateBtn = document.getElementById("clearDateBtn");
     if (clearDateBtn) {
         clearDateBtn.addEventListener("click", clearDateSelection);
+    }
+
+    // クリックで時間ピッカーの表示・非表示切替
+    const timeBtn = document.getElementById("timeBtn");
+    if (timeBtn) {
+        timeBtn.addEventListener("click", toggleTimePicker);
+    }
+
+    // クリックで時間選択をクリア（時間ピッカー内の✕ボタン）
+    const timeClearBtn = document.getElementById("timeClearBtn");
+    if (timeClearBtn) {
+        timeClearBtn.addEventListener("click", clearTimeSelection);
+    }
+
+    // 変更時に選択された'時間'を更新（時のドロップボタン）
+    const hourSelect = document.getElementById("hourSelect");
+    if (hourSelect) {
+        hourSelect.addEventListener("change", updateTimeSelection);
+    }
+
+    // 変更時に選択された'分'を更新（分のドロップボタン）
+    const minuteSelect = document.getElementById("minuteSelect");
+    if (minuteSelect) {
+        minuteSelect.addEventListener("change", updateTimeSelection);
     }
 
     const alertCancelBtn = document.getElementById("alertCancelBtn");
@@ -1054,8 +1084,47 @@ function openDateSelectModal() {
     currentYear = today.getFullYear();
     currentMonth = today.getMonth();
 
+    initializeTimePicker();
     renderCalendar();
     openModal("dateSelectModal");
+}
+
+/**
+ * 時間ピッカーを初期化
+ * 時のドロップダウンに0-23の選択肢を追加
+ */
+function initializeTimePicker() {
+    const hourSelect = document.getElementById("hourSelect");
+    if (!hourSelect) return;
+
+    // 時のドロップダウンに0-23の選択肢を追加（初回のみ）
+    if (hourSelect.options.length <= 1) {
+        for (let i = 0; i < 24; i++) {
+            const option = document.createElement("option");
+            option.value = String(i).padStart(2, "0");
+            option.textContent = String(i).padStart(2, "0");
+            hourSelect.appendChild(option);
+        }
+    }
+
+    // 選択状態をリセット
+    hourSelect.value = "";
+    document.getElementById("minuteSelect").value = "";
+    selectedTime = null;
+
+    // 時間ピッカーを非表示にする
+    const timePickerContainer = document.getElementById("timePickerContainer");
+    if (timePickerContainer) {
+        timePickerContainer.style.display = "none";
+    }
+
+    // 時間選択ボタンのアクティブ状態を解除
+    const timeBtn = document.getElementById("timeBtn");
+    if (timeBtn) {
+        timeBtn.classList.remove("active");
+    }
+
+    updateTimeBtnText();
 }
 
 /**
