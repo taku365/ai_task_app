@@ -1182,6 +1182,20 @@ function clearTimeSelection() {
 }
 
 /**
+ * 時間選択ボタンのテキストを更新
+ */
+function updateTimeBtnText() {
+    const timeBtnText = document.getElementById("timeBtnText");
+    if (!timeBtnText) return;
+
+    if (selectedTime) {
+        timeBtnText.textContent = selectedTime;
+    } else {
+        timeBtnText.textContent = "時間を選択";
+    }
+}
+
+/**
  * カレンダーを描画
  * 前月・当月・次月の日付を含む6週間分のカレンダーグリッドを生成
  */
