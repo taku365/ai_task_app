@@ -313,13 +313,13 @@ class TaskController extends Controller
             ]);
 
             // 4. リレーションを読み込む
-            $task->load(['assignee', 'priority', 'createdBy']);
+            $task->load(['assignee', 'priority', 'createdBy', 'completedBy']);
 
             // 5. レスポンス
             return response()->json([
                 'success' => true,
                 'message' => 'タスクを更新しました',
-                'data' => $task
+                'task' => $task
             ]);
         } catch (\Exception $e) {
             return response()->json([
@@ -382,6 +382,34 @@ class TaskController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'タスクの完了に失敗しました: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    // タスクを未完了に戻す : PATCH /api/tasks/{id}/uncomplete
+    public function uncomplete($id)
+    {
+        try {
+            $task = Task::findOrFail($id);
+
+            // 完了フラグをfalseに戻す
+            $task->completed_flg = false;
+            $task->completed_at = null;
+            $task->completed_by_id = null;
+            $task->save();
+
+            // 更新後のタスクをリレーション込みで取得
+            $task->load(['assignee', 'priority', 'createdBy']);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'タスクを未完了に戻しました',
+                'task' => $task
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'タスクを未完了に戻す処理に失敗しました: ' . $e->getMessage()
             ], 500);
         }
     }

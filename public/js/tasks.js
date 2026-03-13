@@ -528,7 +528,7 @@ function transformTaskData(dbTask) {
         assignee: dbTask.assignee?.name || "指定なし",
         priority: dbTask.priority?.name || "指定なし",
         priorityCode: dbTask.priority?.code || "none",
-        completedFlg: dbTask.completed_flg === true,
+        completedFlg: dbTask.completed_flg === true || dbTask.completed_flg === 1,
         completedAt: dbTask.completed_at,
         completedBy: dbTask.completed_by?.name,
         createdBy: dbTask.created_by?.name,
@@ -841,8 +841,11 @@ function openNewTaskModal() {
         btn.classList.remove("active", "high", "medium", "low");
     });
 
+    // 編集可能モードに設定（新規作成時）
+    setTaskDetailEditable(true);
+    
     // 完了ボタンを非表示にする（新規作成時）
-    document.getElementById("completeTaskBtn").classList.add("hidden");
+    document.getElementById("completeTaskBtn").style.display = "none";
 
     // 保存ボタンのイベントリスナーを設定（新規作成用）
     const saveTaskBtn = document.getElementById("saveTaskBtn");
@@ -885,11 +888,135 @@ function openTaskDetailModal(taskId) {
         }
     });
 
-    // 保存ボタンのイベントリスナーを設定（編集用）
-    const saveTaskBtn = document.getElementById("saveTaskBtn");
-    saveTaskBtn.addEventListener("click", editTask);
-
+    // モーダルを開く
     openModal("taskDetailModal");
+
+    // モーダルが開いた後に編集可/不可を設定
+    setTimeout(() => {
+        if (task.completedFlg) {
+            setTaskDetailEditable(false);
+        } else {
+            setTaskDetailEditable(true);
+            // 保存ボタンのイベントリスナーを設定（編集用）
+            const saveTaskBtn = document.getElementById("saveTaskBtn");
+            saveTaskBtn.addEventListener("click", editTask);
+        }
+    }, 100);
+}
+
+/**
+ * タスク詳細モーダルの編集可/不可を設定
+ * @param {boolean} editable - true: 編集可能, false: 編集不可
+ */
+function setTaskDetailEditable(editable) {
+    const textInputField = document.getElementById("textInputField");
+    const detailCheckbox = document.getElementById("detailCheckbox");
+    const taskDetailTitle = document.querySelector(".task-detail-title");
+    const dateField = document.getElementById("dateField");
+    const assigneeField = document.getElementById("assigneeField");
+    const priorityField = document.getElementById("priorityField");
+    const priorityButtons = document.querySelectorAll(".priority-btn");
+    const completeBtn = document.getElementById("completeTaskBtn");
+    const saveBtn = document.getElementById("saveTaskBtn");
+
+    if (editable) {
+        // 編集可能モード
+        if (textInputField) {
+            textInputField.readOnly = false;
+            textInputField.style.color = "";
+        }
+        
+        if (taskDetailTitle) {
+            taskDetailTitle.classList.remove("completed-style");
+        }
+        
+        if (detailCheckbox) {
+            detailCheckbox.innerHTML = "";
+            detailCheckbox.classList.remove("clickable");
+            detailCheckbox.style.backgroundColor = "";
+            detailCheckbox.style.borderColor = "";
+            detailCheckbox.style.color = "";
+            detailCheckbox.onclick = null;
+        }
+        
+        if (dateField) {
+            dateField.classList.remove("disabled");
+        }
+        
+        if (assigneeField) {
+            assigneeField.classList.remove("disabled");
+        }
+        
+        if (priorityField) {
+            priorityField.classList.remove("disabled");
+        }
+        
+        priorityButtons.forEach((btn) => {
+            btn.disabled = false;
+            btn.style.opacity = "";
+        });
+        
+        if (completeBtn) {
+            completeBtn.classList.remove("hidden");
+            completeBtn.style.display = "";
+        }
+        
+        if (saveBtn) {
+            saveBtn.style.display = "";
+            saveBtn.disabled = false;
+            
+            // 既存のイベントリスナーを削除してから新しいものを追加
+            const newSaveBtn = saveBtn.cloneNode(true);
+            saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
+            newSaveBtn.addEventListener("click", editTask);
+        }
+    } else {
+        // 編集不可モード（完了済み）
+        if (textInputField) {
+            textInputField.readOnly = true;
+        }
+        
+        if (taskDetailTitle) {
+            taskDetailTitle.classList.add("completed-style");
+        }
+        
+        if (detailCheckbox) {
+            detailCheckbox.innerHTML = '<i class="fas fa-check"></i>';
+            detailCheckbox.classList.add("clickable");
+            detailCheckbox.style.backgroundColor = "#27ae60";
+            detailCheckbox.style.borderColor = "#27ae60";
+            detailCheckbox.style.color = "#fff";
+            detailCheckbox.style.display = "flex";
+            detailCheckbox.style.alignItems = "center";
+            detailCheckbox.style.justifyContent = "center";
+            detailCheckbox.onclick = uncompleteTask;
+        }
+        
+        if (dateField) {
+            dateField.classList.add("disabled");
+        }
+        
+        if (assigneeField) {
+            assigneeField.classList.add("disabled");
+        }
+        
+        if (priorityField) {
+            priorityField.classList.add("disabled");
+        }
+        
+        priorityButtons.forEach((btn) => {
+            btn.disabled = true;
+            btn.style.opacity = "0.5";
+        });
+        
+        if (completeBtn) {
+            completeBtn.style.display = "none";
+        }
+        
+        if (saveBtn) {
+            saveBtn.style.display = "none";
+        }
+    }
 }
 
 /**
@@ -1017,7 +1144,10 @@ async function createNewTask() {
  * 2. データベースに保存
  */
 async function editTask() {
-    if (!currentTask || !currentTask.id) return;
+    if (!currentTask || !currentTask.id) {
+        alert("エラー: タスク情報が見つかりません");
+        return;
+    }
 
     // 入力チェック
     const textInput = document.getElementById("textInputField").value.trim();
@@ -1027,6 +1157,11 @@ async function editTask() {
     }
 
     const saveBtn = document.getElementById("saveTaskBtn");
+    if (!saveBtn) {
+        alert("エラー: 保存ボタンが見つかりません");
+        return;
+    }
+    
     saveBtn.disabled = true;
     saveBtn.textContent = "保存中...";
     try {
@@ -1069,19 +1204,46 @@ async function editTask() {
             }),
         });
         const saveResult = await saveResponse.json();
+        
         if (!saveResult.success) {
             alert("更新に失敗しました: " + (saveResult.message || ""));
             return;
         }
+        
+        if (!saveResult.task) {
+            console.error("saveResult.task is missing:", saveResult);
+            alert("エラー: サーバーからタスク情報が返されませんでした");
+            return;
+        }
+        
         // モーダルを閉じる
         closeModal("taskDetailModal");
 
-        // currentTaskListの該当タスクを更新（APIレスポンスから最新データを取得）
-        const editTaskIndex = currentTaskList.findIndex(
-            (t) => t.id === currentTask.id,
-        );
-        if (editTaskIndex !== -1 && saveResult.task) {
-            currentTaskList[editTaskIndex] = transformTaskData(saveResult.task);
+        // 更新されたタスクを取得
+        const updatedTask = transformTaskData(saveResult.task);
+
+        // 完了済みフィルタで、未完了に戻したタスクを保存した場合
+        if (updatedTask.completedFlg === false && currentFilter === "completed") {
+            // 完了済みフィルタから削除（未完了に戻ったため）
+            currentTaskList = currentTaskList.filter(
+                (t) => t.id !== currentTask.id,
+            );
+        } else if (currentFilter === "completed") {
+            // 完了済みフィルタで、完了状態を維持したまま編集した場合
+            const editTaskIndex = currentTaskList.findIndex(
+                (t) => t.id === currentTask.id,
+            );
+            if (editTaskIndex !== -1) {
+                currentTaskList[editTaskIndex] = updatedTask;
+            }
+        } else {
+            // 他のフィルタの場合
+            const editTaskIndex = currentTaskList.findIndex(
+                (t) => t.id === currentTask.id,
+            );
+            if (editTaskIndex !== -1) {
+                currentTaskList[editTaskIndex] = updatedTask;
+            }
         }
 
         // 画面を再描画
@@ -1165,25 +1327,168 @@ async function executeDeleteTask() {
 }
 
 /**
- * タスク完了の確認処理
- * 他メンバーのタスクの場合は確認アラートを表示
+ * リスト画面のチェックボックスクリック処理
+ * @param {Event} event - クリックイベント
+ * @param {number} taskId - タスクID
  */
-function completeTask() {
-    if (!currentTask) return;
+// eslint-disable-next-line no-unused-vars
+function handleCheckboxClick(event, taskId) {
+    event.stopPropagation();
 
-    if (isOtherMemberTask(currentTask)) {
-        const assigneeName = currentTask.assignee;
+    const task = currentTaskList.find((t) => t.id === taskId);
+    if (!task) return;
+
+    currentTask = task;
+
+    if (isOtherMemberTask(task)) {
+        const assigneeName = task.assignee;
         showAlert(
             "他メンバーのタスクです",
             `このタスクは<strong>${assigneeName}</strong>さんに割り当てられています。完了にしてもよろしいですか?`,
             "完了にする",
-            () => executeCompleteTask(),
+            () => executeCompleteTaskWithAnimation(taskId),
             "fas fa-user",
         );
         return;
     }
 
-    executeCompleteTask();
+    executeCompleteTaskWithAnimation(taskId);
+}
+
+/**
+ * タスク完了の確認処理
+ * 他メンバーのタスクの場合は確認アラートを表示
+ */
+async function completeTask() {
+    if (!currentTask) return;
+
+    // まず編集内容を保存
+    const textInput = document.getElementById("textInputField").value.trim();
+    if (!textInput) {
+        alert("タスク名を入力してください");
+        return;
+    }
+
+    // currentTaskを更新
+    currentTask.textInput = textInput;
+    currentTask.aiTask = textInput;
+
+    const detailDateElement = document.getElementById("detailDate");
+    const manualDate = detailDateElement.dataset.date || detailDateElement.textContent;
+    const manualTime = detailDateElement.dataset.time || null;
+
+    currentTask.date = manualDate || "指定なし";
+    currentTask.time = manualTime;
+
+    const manualAssignee = document.getElementById("detailAssignee").textContent;
+    currentTask.assignee = manualAssignee || "指定なし";
+
+    const manualPriority = document.querySelector(".priority-btn.active")?.dataset.priority;
+    currentTask.priority = manualPriority || "指定なし";
+
+    try {
+        // 編集内容を保存
+        const saveResponse = await fetch(`/api/tasks/${currentTask.id}`, {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": csrfToken,
+                Accept: "application/json",
+            },
+            body: JSON.stringify({
+                ai_task: currentTask.aiTask,
+                text_input: currentTask.textInput,
+                date: currentTask.date,
+                time: currentTask.time,
+                assignee: currentTask.assignee,
+                priority: currentTask.priority,
+            }),
+        });
+
+        const saveResult = await saveResponse.json();
+        if (!saveResult.success) {
+            alert("更新に失敗しました: " + (saveResult.message || ""));
+            return;
+        }
+
+        // 保存後、完了処理を実行
+        currentTask = transformTaskData(saveResult.task);
+
+        if (isOtherMemberTask(currentTask)) {
+            const assigneeName = currentTask.assignee;
+            showAlert(
+                "他メンバーのタスクです",
+                `このタスクは<strong>${assigneeName}</strong>さんに割り当てられています。完了にしてもよろしいですか?`,
+                "完了にする",
+                () => executeCompleteTask(),
+                "fas fa-user",
+            );
+            return;
+        }
+
+        executeCompleteTask();
+    } catch (error) {
+        alert("エラー: " + error.message);
+    }
+}
+
+/**
+ * タスク完了を実行（アニメーション付き）
+ * リスト画面のチェックボックスクリック時に使用
+ * @param {number} taskId - タスクID
+ */
+async function executeCompleteTaskWithAnimation(taskId) {
+    if (!currentTask) return;
+
+    const taskElement = event.target.closest(".task-item");
+    const checkboxElement = event.target.closest(".task-checkbox");
+
+    if (!taskElement || !checkboxElement) return;
+
+    try {
+        checkboxElement.classList.add("completing");
+        checkboxElement.innerHTML = '<i class="fas fa-check"></i>';
+
+        await new Promise((resolve) => setTimeout(resolve, 300));
+
+        const response = await fetch(`/api/tasks/${taskId}/complete`, {
+            method: "PATCH",
+            headers: {
+                "X-CSRF-TOKEN": csrfToken,
+                Accept: "application/json",
+            },
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            checkboxElement.classList.remove("completing");
+            checkboxElement.innerHTML = "";
+            alert("完了処理に失敗しました: " + (result.message || ""));
+            return;
+        }
+
+        taskElement.classList.add("completing");
+
+        await new Promise((resolve) => setTimeout(resolve, 400));
+
+        currentTask = transformTaskData(result.task);
+
+        if (currentFilter !== "completed") {
+            currentTaskList = currentTaskList.filter((t) => t.id !== taskId);
+        }
+
+        renderTaskList(currentTaskList, currentFilter);
+    } catch (error) {
+        if (checkboxElement) {
+            checkboxElement.classList.remove("completing");
+            checkboxElement.innerHTML = "";
+        }
+        if (taskElement) {
+            taskElement.classList.remove("completing");
+        }
+        alert("エラー: " + error.message);
+    }
 }
 
 /**
@@ -1229,6 +1534,60 @@ async function executeCompleteTask() {
 
         // 画面を再描画
         renderTaskList(currentTaskList, currentFilter);
+    } catch (error) {
+        alert("エラー: " + error.message);
+    }
+}
+
+/**
+ * タスクを未完了に戻す確認処理
+ * 他メンバーのタスクの場合は確認アラートを表示
+ */
+function uncompleteTask() {
+    if (!currentTask) return;
+
+    if (isOtherMemberTask(currentTask)) {
+        const assigneeName = currentTask.assignee;
+        showAlert(
+            "他メンバーのタスクです",
+            `このタスクは<strong>${assigneeName}</strong>さんに割り当てられています。未完了に戻してもよろしいですか?`,
+            "未完了に戻す",
+            () => executeUncompleteTask(),
+            "fas fa-user",
+        );
+        return;
+    }
+
+    executeUncompleteTask();
+}
+
+/**
+ * タスクを未完了に戻す処理を実行
+ */
+async function executeUncompleteTask() {
+    if (!currentTask) return;
+
+    try {
+        const response = await fetch(`/api/tasks/${currentTask.id}/uncomplete`, {
+            method: "PATCH",
+            headers: {
+                "X-CSRF-TOKEN": csrfToken,
+                Accept: "application/json",
+            },
+        });
+
+        const result = await response.json();
+
+        if (!result.success) {
+            alert("未完了に戻す処理に失敗しました: " + (result.message || ""));
+            return;
+        }
+
+        // currentTaskを更新
+        currentTask = transformTaskData(result.task);
+
+        // 編集可能モードに切り替え
+        setTaskDetailEditable(true);
     } catch (error) {
         alert("エラー: " + error.message);
     }
@@ -1318,7 +1677,7 @@ function renderTaskItem(task, isCompleted = false, groupType = null) {
         <div class="task-item ${completedClass}" onclick="openTaskDetailModal(${task.id})">
             ${isCompleted ? renderCompletedInfo(task, checkboxContent, getPriorityClass(task.priority)) : ""}
             <div class="task-item-top">
-                ${!isCompleted ? `<div class="task-checkbox ${getPriorityClass(task.priority)}">${checkboxContent}</div>` : ""}
+                ${!isCompleted ? `<div class="task-checkbox ${getPriorityClass(task.priority)}" onclick="handleCheckboxClick(event, ${task.id})">${checkboxContent}</div>` : ""}
                 <div class="task-title">${task.aiTask}</div>
             </div>
             <div class="task-meta">

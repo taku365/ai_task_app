@@ -747,6 +747,79 @@ body {
     margin-left: 36px;
 }
 
+/* チェックボックスのアニメーション */
+@keyframes checkmarkAppear {
+    0% {
+        opacity: 0;
+        transform: scale(0);
+    }
+    50% {
+        transform: scale(1.2);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes taskCompleting {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    50% {
+        opacity: 0.5;
+        transform: translateY(-5px) scale(0.98);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.95);
+    }
+}
+
+.task-checkbox.completing {
+    background-color: #27ae60;
+    border-color: #27ae60;
+}
+
+.task-checkbox.completing i {
+    animation: checkmarkAppear 0.3s ease-out forwards;
+}
+
+.task-item.completing {
+    animation: taskCompleting 0.4s ease-out forwards;
+    pointer-events: none;
+}
+
+/* 詳細モーダル内の完了済みタスクスタイル */
+.task-detail-title.completed-style input {
+    color: #7f8c8d;
+    text-decoration: line-through;
+}
+
+.task-detail-title .task-checkbox {
+    cursor: default;
+    font-size: 14px;
+}
+
+.task-detail-title .task-checkbox.clickable {
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.task-detail-title .task-checkbox.clickable:hover {
+    transform: scale(1.1);
+}
+
+.detail-field.disabled {
+    opacity: 0.6;
+    pointer-events: none;
+}
+
+.detail-field.disabled .detail-field-value {
+    color: #95a5a6;
+}
+
 /* 日付選択モーダル */
 .date-select-header {
     display: flex;

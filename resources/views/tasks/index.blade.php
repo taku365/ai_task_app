@@ -157,7 +157,7 @@
                     <div class="detail-field-value" id="detailAssignee">{{ $currentUser->name }}</div>
                 </div>
 
-                <div class="detail-field">
+                <div class="detail-field" id="priorityField">
                     <div class="detail-field-label">
                         <i class="fas fa-flag"></i>
                         <span>優先度</span>

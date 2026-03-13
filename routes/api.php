@@ -21,3 +21,6 @@ Route::delete('/tasks/{id}', [TaskController::class, 'destroy']);
 
 // 完了
 Route::patch('/tasks/{id}/complete', [TaskController::class, 'complete']);
+
+// 未完了に戻す
+Route::patch('/tasks/{id}/uncomplete', [TaskController::class, 'uncomplete']);
