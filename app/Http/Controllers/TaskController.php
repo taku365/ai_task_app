@@ -4,10 +4,13 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
 
 use App\Models\Task;
 use App\Models\User;
 use App\Models\Priority;
+
+
 
 class TaskController extends Controller
 {
@@ -59,18 +62,22 @@ class TaskController extends Controller
     // 一覧取得API : GET /api/tasks
     public function apiIndex(Request $request)
     {
-        // 仮のログインユーザーを取得
-        $currentUser = User::where('email', 'matsuda@example.com')->first();
+        // ログインユーザーを取得
+        $currentUser = Auth::user();
         // URLの ?filter=xxx を取得（未指定なら 'self'）
         $filter = $request->query('filter', 'self');
         // 共通化したロジックでタスクを取得
         $tasks = $this->getFilteredTasks($currentUser, $filter);
 
+        // 全ユーザーを取得
+        $users = User::select('id', 'name')->get();
+
         // JSONレスポンスを返す（画面ではなくデータ）
         return response()->json([
             'tasks' => $tasks,
             'filter' => $filter,
-            'currentUser' => $currentUser
+            'currentUser' => $currentUser,
+            'users' => $users
         ]);
     }
 
@@ -78,12 +85,15 @@ class TaskController extends Controller
     // 一覧表示(初回表示用) : GET /tasks
     public function index(Request $request)
     {
-        $currentUser = User::where('email', 'matsuda@example.com')->first();
+        $currentUser = Auth::user();
         $filter = $request->query('filter', 'self');
         $tasks = $this->getFilteredTasks($currentUser, $filter);
 
+        // 全ユーザーを取得
+        $users = User::select('id', 'name')->get();
+
         // Bladeテンプレートにデータを渡してHTMLを生成
-        return view('tasks.index', compact('tasks', 'filter', 'currentUser'));
+        return view('tasks.index', compact('tasks', 'filter', 'currentUser', 'users'));
     }
 
     // AI解析 : POST /api/tasks/analyze
@@ -104,7 +114,7 @@ class TaskController extends Controller
         $todayString = $today->format('Y年n月j日') . "（{$weekday}）";
 
         // ★★★ログインユーザーを取得
-        $currentUser = User::where('email', 'matsuda@example.com')->first();
+        $currentUser = Auth::user();
 
         // ★★★ データベースから全ユーザー名を取得
         $userNames = User::pluck('name')->implode(', ');
@@ -246,7 +256,7 @@ class TaskController extends Controller
 
         try {
             // ★★★ ログインユーザーを取得
-            $currentUser = User::where('email', 'matsuda@example.com')->first();
+            $currentUser = Auth::user();
 
             // 3. データ変換 (日付, 担当者, 優先度)
             $dueDate = $this->convertDateStringToDate($validated['date'] ?? null);
@@ -360,7 +370,7 @@ class TaskController extends Controller
             // タスクを検索 (なければ404エラー)
             $task = Task::findOrFail($id);
 
-            $currentUser = User::where('email', 'matsuda@example.com')->first();
+            $currentUser = Auth::user();
 
             // DBを更新
             $task->update([

@@ -2,20 +2,10 @@
 // 0. 設定（定数）
 //==============================================================================
 
-/** 現在のログインユーザー名 */
-const CURRENT_USER = "松田";
-
 /** タスク担当者として選択可能なメンバーリスト */
-const MEMBERS = [
-    { id: 1, name: "松本" },
-    { id: 2, name: "野中" },
-    { id: 3, name: "宮原" },
-    { id: 4, name: "安岡" },
-    { id: 5, name: "白石" },
-    { id: 6, name: "松波" },
-    { id: 7, name: "阪本" },
-    { id: 8, name: "松田" },
-];
+let MEMBERS = window.MEMBERS || [];
+/** 現在のログインユーザー名 */
+let CURRENT_USER = window.CURRENT_USER || "";
 
 /** LaravelのCSRF保護用トークン */
 const csrfToken = document
@@ -143,14 +133,18 @@ function groupTasksByDate(tasks) {
 
     // グループを作成
     const groups = {
-        overdue: [],
-        today: [],
-        tomorrow: [],
-        future: {},
+        overdue: [], // 期限切れ
+        today: [], // 今日
+        tomorrow: [], // 明日
+        future: {}, // 以降の日付（日付ごとに分けたいためオブジェクト）
+        noDate: [], // 期限なし
     };
 
     tasks.forEach((task) => {
-        if (!task.dueDate) return;
+        if (!task.dueDate || task.date === "指定なし") {
+            groups.noDate.push(task);
+            return;
+        }
 
         const taskDate = new Date(task.dueDate);
         taskDate.setHours(0, 0, 0, 0);
@@ -166,7 +160,8 @@ function groupTasksByDate(tasks) {
             groups.tomorrow.push(task);
         } else {
             // 以降の日付
-            const dateKey = taskDate.toISOString().split("T")[0];
+            const dateKey = taskDate.toISOString().split("T")[0]; // YYYY-MM-DD形式の文字列
+            // その日付の箱がなければ作って、そこにタスクを入れる
             if (!groups.future[dateKey]) {
                 groups.future[dateKey] = [];
             }
@@ -181,6 +176,15 @@ function groupTasksByDate(tasks) {
 
     // 結果を配列に変換
     const result = [];
+
+    // 期限なし
+    if (groups.noDate.length > 0) {
+        result.push({
+            type: "noDate",
+            headerText: "期限なし",
+            tasks: sortTasksWithinGroup(groups.noDate),
+        });
+    }
 
     // 期限切れ
     if (groups.overdue.length > 0) {
@@ -293,18 +297,22 @@ function sortTasksWithinGroup(tasks, oldestFirst = false) {
  */
 function formatTaskDateInGroup(task, groupType) {
     // 未割当グループの場合
-    if (groupType === "noAssignee" || groupType === "noDate" || groupType === "noPriority") {
+    if (
+        groupType === "noAssignee" ||
+        groupType === "noDate" ||
+        groupType === "noPriority"
+    ) {
         // 担当者未設定グループ: 日付と時間を表示
         if (groupType === "noAssignee") {
             if (!task.dueDate || task.date === "指定なし") return "期限なし";
             return task.time ? `${task.date} ${task.time}` : task.date;
         }
-        
+
         // 期限未設定グループ: 担当者と優先度を表示（日付表示は不要）
         if (groupType === "noDate") {
             return ""; // 日付欄は非表示
         }
-        
+
         // 優先度未設定グループ: 日付と時間を表示
         if (groupType === "noPriority") {
             if (!task.dueDate || task.date === "指定なし") return "期限なし";
@@ -499,7 +507,9 @@ function renderTaskList(tasks, filter) {
             .map((group) => {
                 const header = `<div class="date-group-header">${group.headerText}</div>`;
                 const taskItems = group.tasks
-                    .map((task) => renderTaskItem(task, isCompleted, group.type))
+                    .map((task) =>
+                        renderTaskItem(task, isCompleted, group.type),
+                    )
                     .join("");
                 return header + taskItems;
             })
@@ -528,7 +538,8 @@ function transformTaskData(dbTask) {
         assignee: dbTask.assignee?.name || "指定なし",
         priority: dbTask.priority?.name || "指定なし",
         priorityCode: dbTask.priority?.code || "none",
-        completedFlg: dbTask.completed_flg === true || dbTask.completed_flg === 1,
+        completedFlg:
+            dbTask.completed_flg === true || dbTask.completed_flg === 1,
         completedAt: dbTask.completed_at,
         completedBy: dbTask.completed_by?.name,
         createdBy: dbTask.created_by?.name,
@@ -843,13 +854,13 @@ function openNewTaskModal() {
 
     // 編集可能モードに設定（新規作成時）
     setTaskDetailEditable(true);
-    
+
     // 完了ボタンを非表示にする（新規作成時）
     document.getElementById("completeTaskBtn").style.display = "none";
 
     // 保存ボタンのイベントリスナーを設定（新規作成用）
     const saveTaskBtn = document.getElementById("saveTaskBtn");
-    saveTaskBtn.addEventListener("click", createNewTask);
+    saveTaskBtn.onclick = createNewTask;
 
     openModal("taskDetailModal");
 }
@@ -925,11 +936,11 @@ function setTaskDetailEditable(editable) {
             textInputField.readOnly = false;
             textInputField.style.color = "";
         }
-        
+
         if (taskDetailTitle) {
             taskDetailTitle.classList.remove("completed-style");
         }
-        
+
         if (detailCheckbox) {
             detailCheckbox.innerHTML = "";
             detailCheckbox.classList.remove("clickable");
@@ -938,33 +949,33 @@ function setTaskDetailEditable(editable) {
             detailCheckbox.style.color = "";
             detailCheckbox.onclick = null;
         }
-        
+
         if (dateField) {
             dateField.classList.remove("disabled");
         }
-        
+
         if (assigneeField) {
             assigneeField.classList.remove("disabled");
         }
-        
+
         if (priorityField) {
             priorityField.classList.remove("disabled");
         }
-        
+
         priorityButtons.forEach((btn) => {
             btn.disabled = false;
             btn.style.opacity = "";
         });
-        
+
         if (completeBtn) {
             completeBtn.classList.remove("hidden");
             completeBtn.style.display = "";
         }
-        
+
         if (saveBtn) {
             saveBtn.style.display = "";
             saveBtn.disabled = false;
-            
+
             // 既存のイベントリスナーを削除してから新しいものを追加
             const newSaveBtn = saveBtn.cloneNode(true);
             saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
@@ -975,11 +986,11 @@ function setTaskDetailEditable(editable) {
         if (textInputField) {
             textInputField.readOnly = true;
         }
-        
+
         if (taskDetailTitle) {
             taskDetailTitle.classList.add("completed-style");
         }
-        
+
         if (detailCheckbox) {
             detailCheckbox.innerHTML = '<i class="fas fa-check"></i>';
             detailCheckbox.classList.add("clickable");
@@ -991,28 +1002,28 @@ function setTaskDetailEditable(editable) {
             detailCheckbox.style.justifyContent = "center";
             detailCheckbox.onclick = uncompleteTask;
         }
-        
+
         if (dateField) {
             dateField.classList.add("disabled");
         }
-        
+
         if (assigneeField) {
             assigneeField.classList.add("disabled");
         }
-        
+
         if (priorityField) {
             priorityField.classList.add("disabled");
         }
-        
+
         priorityButtons.forEach((btn) => {
             btn.disabled = true;
             btn.style.opacity = "0.5";
         });
-        
+
         if (completeBtn) {
             completeBtn.style.display = "none";
         }
-        
+
         if (saveBtn) {
             saveBtn.style.display = "none";
         }
@@ -1161,7 +1172,7 @@ async function editTask() {
         alert("エラー: 保存ボタンが見つかりません");
         return;
     }
-    
+
     saveBtn.disabled = true;
     saveBtn.textContent = "保存中...";
     try {
@@ -1204,18 +1215,18 @@ async function editTask() {
             }),
         });
         const saveResult = await saveResponse.json();
-        
+
         if (!saveResult.success) {
             alert("更新に失敗しました: " + (saveResult.message || ""));
             return;
         }
-        
+
         if (!saveResult.task) {
             console.error("saveResult.task is missing:", saveResult);
             alert("エラー: サーバーからタスク情報が返されませんでした");
             return;
         }
-        
+
         // モーダルを閉じる
         closeModal("taskDetailModal");
 
@@ -1223,7 +1234,10 @@ async function editTask() {
         const updatedTask = transformTaskData(saveResult.task);
 
         // 完了済みフィルタで、未完了に戻したタスクを保存した場合
-        if (updatedTask.completedFlg === false && currentFilter === "completed") {
+        if (
+            updatedTask.completedFlg === false &&
+            currentFilter === "completed"
+        ) {
             // 完了済みフィルタから削除（未完了に戻ったため）
             currentTaskList = currentTaskList.filter(
                 (t) => t.id !== currentTask.id,
@@ -1374,16 +1388,19 @@ async function completeTask() {
     currentTask.aiTask = textInput;
 
     const detailDateElement = document.getElementById("detailDate");
-    const manualDate = detailDateElement.dataset.date || detailDateElement.textContent;
+    const manualDate =
+        detailDateElement.dataset.date || detailDateElement.textContent;
     const manualTime = detailDateElement.dataset.time || null;
 
     currentTask.date = manualDate || "指定なし";
     currentTask.time = manualTime;
 
-    const manualAssignee = document.getElementById("detailAssignee").textContent;
+    const manualAssignee =
+        document.getElementById("detailAssignee").textContent;
     currentTask.assignee = manualAssignee || "指定なし";
 
-    const manualPriority = document.querySelector(".priority-btn.active")?.dataset.priority;
+    const manualPriority = document.querySelector(".priority-btn.active")
+        ?.dataset.priority;
     currentTask.priority = manualPriority || "指定なし";
 
     try {
@@ -1568,13 +1585,16 @@ async function executeUncompleteTask() {
     if (!currentTask) return;
 
     try {
-        const response = await fetch(`/api/tasks/${currentTask.id}/uncomplete`, {
-            method: "PATCH",
-            headers: {
-                "X-CSRF-TOKEN": csrfToken,
-                Accept: "application/json",
+        const response = await fetch(
+            `/api/tasks/${currentTask.id}/uncomplete`,
+            {
+                method: "PATCH",
+                headers: {
+                    "X-CSRF-TOKEN": csrfToken,
+                    Accept: "application/json",
+                },
             },
-        });
+        );
 
         const result = await response.json();
 
@@ -1640,6 +1660,7 @@ async function filterTasks(filter) {
 
         // APIレスポンス(JSON)を取得
         const data = await response.json();
+
         // - レスポンスの tasks 配列を取り出し、画面表示用データに変換
         const transformedTasks = data.tasks.map(transformTaskData);
         // - currentTaskListに保持する
