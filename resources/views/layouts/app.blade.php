@@ -13,7 +13,6 @@
 <body>
     @yield('content')
 
-    <script src="{{ asset('js/tasks.js') }}"></script>
     @stack('scripts')
 </body>
 

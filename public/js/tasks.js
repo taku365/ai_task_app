@@ -555,18 +555,14 @@ function transformTaskData(dbTask) {
  * DOMの読み込み完了後にイベントリスナーを設定
  */
 document.addEventListener("DOMContentLoaded", () => {
-    console.log("DOMContentLoaded fired");
-
     setupEventListeners();
 
     // Bladeからフィルタを取得
     const filterTabsContainer = document.querySelector(".filter-tabs");
-    console.log("filterTabsContainer:", filterTabsContainer);
     const filter = filterTabsContainer?.dataset.filter || "self";
 
     // 初期表示: 取得したフィルタでタスク一覧を表示
     filterTasks(filter);
-    console.log("initial filter:", filter);
 });
 
 //==============================================================================
@@ -757,6 +753,12 @@ function setupEventListeners() {
             alertCallback = null;
         });
     }
+
+    // 保存ボタン（モーダル）ボタン
+    const saveTaskBtn = document.getElementById("saveTaskBtn");
+    if (saveTaskBtn) {
+        saveTaskBtn.addEventListener("click", handleSaveTask);
+    }
 }
 
 //==============================================================================
@@ -814,6 +816,23 @@ function showAlert(
 //==============================================================================
 
 /**
+ * 保存ボタンのハンドラー
+ * currentTask.id の有無で新規作成か編集かを判定
+ */
+async function handleSaveTask() {
+    if (!currentTask) {
+        alert("エラー: タスク情報が見つかりません");
+        return;
+    }
+
+    if (currentTask.id) {
+        await editTask();
+    } else {
+        await createNewTask();
+    }
+}
+
+/**
  * 他メンバーに割り当てられたタスクかどうかを判定
  * @param {Object} task - 判定対象のタスクオブジェクト
  * @returns {boolean} 他メンバーのタスクの場合true
@@ -827,7 +846,7 @@ function isOtherMemberTask(task) {
  * 初期値として現在のユーザーを担当者に設定
  */
 function openNewTaskModal() {
-    // 空のオブジェクトでcurrentTaskを初期化
+    // 空のオブジェクトでcurrentTaskを初期化 (idなし)
     currentTask = {
         textInput: "",
         aiTask: "",
@@ -857,10 +876,6 @@ function openNewTaskModal() {
 
     // 完了ボタンを非表示にする（新規作成時）
     document.getElementById("completeTaskBtn").style.display = "none";
-
-    // 保存ボタンのイベントリスナーを設定（新規作成用）
-    const saveTaskBtn = document.getElementById("saveTaskBtn");
-    saveTaskBtn.onclick = createNewTask;
 
     openModal("taskDetailModal");
 }
@@ -908,9 +923,6 @@ function openTaskDetailModal(taskId) {
             setTaskDetailEditable(false);
         } else {
             setTaskDetailEditable(true);
-            // 保存ボタンのイベントリスナーを設定（編集用）
-            const saveTaskBtn = document.getElementById("saveTaskBtn");
-            saveTaskBtn.addEventListener("click", editTask);
         }
     }, 100);
 }
@@ -975,11 +987,6 @@ function setTaskDetailEditable(editable) {
         if (saveBtn) {
             saveBtn.style.display = "";
             saveBtn.disabled = false;
-
-            // 既存のイベントリスナーを削除してから新しいものを追加
-            const newSaveBtn = saveBtn.cloneNode(true);
-            saveBtn.parentNode.replaceChild(newSaveBtn, saveBtn);
-            newSaveBtn.addEventListener("click", editTask);
         }
     } else {
         // 編集不可モード（完了済み）
@@ -1037,7 +1044,7 @@ function setTaskDetailEditable(editable) {
  * 3. データベースに保存
  */
 async function createNewTask() {
-    if (!currentTask) return;
+    // handleSaveTask();
 
     // 入力チェック
     const textInput = document.getElementById("textInputField").value.trim();
@@ -1155,10 +1162,7 @@ async function createNewTask() {
  * 2. データベースに保存
  */
 async function editTask() {
-    if (!currentTask || !currentTask.id) {
-        alert("エラー: タスク情報が見つかりません");
-        return;
-    }
+    // currentTask.id の存在チェックは handleSaveTask() で済んでいる
 
     // 入力チェック
     const textInput = document.getElementById("textInputField").value.trim();
@@ -1637,10 +1641,10 @@ async function filterTasks(filter) {
     // 現在のフィルタ変数を更新
     currentFilter = filter;
 
-    // URLを更新（リロード時に状態を保持するため）
-    const url = new URL(window.location);
-    url.searchParams.set("filter", filter); // URLのクエリパラメータfilterに変数のfilterをセットする
-    window.history.pushState({}, "", url); // ブラウザを再読み込みせず、表示中のURLだけ書き換える
+    // // URLを更新（リロード時に状態を保持するため）
+    // const url = new URL(window.location);
+    // url.searchParams.set("filter", filter); // URLのクエリパラメータfilterに変数のfilterをセットする
+    // window.history.pushState({}, "", url); // ブラウザを再読み込みせず、表示中のURLだけ書き換える
 
     // タブのactive状態を更新（画面の見た目)
     document.querySelectorAll(".filter-tab").forEach((tab) => {
