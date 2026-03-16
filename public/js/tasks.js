@@ -177,15 +177,6 @@ function groupTasksByDate(tasks) {
     // 結果を配列に変換
     const result = [];
 
-    // 期限なし
-    if (groups.noDate.length > 0) {
-        result.push({
-            type: "noDate",
-            headerText: "期限なし",
-            tasks: sortTasksWithinGroup(groups.noDate),
-        });
-    }
-
     // 期限切れ
     if (groups.overdue.length > 0) {
         result.push({
@@ -223,6 +214,15 @@ function groupTasksByDate(tasks) {
             tasks: sortTasksWithinGroup(groups.future[dateKey]),
         });
     });
+
+    // 期限なし
+    if (groups.noDate.length > 0) {
+        result.push({
+            type: "noDate",
+            headerText: "期限なし",
+            tasks: sortTasksWithinGroup(groups.noDate),
+        });
+    }
 
     return result;
 }
@@ -1798,7 +1798,7 @@ function renderMemberList() {
 // ★★★ inline onclick を辞める必要がある
 // eslint-disable-next-line no-unused-vars
 function selectMemberInMemberSelectModal(memberId) {
-    if(selectedMember === memberId) {
+    if (selectedMember === memberId) {
         selectedMember = null;
     } else {
         selectedMember = memberId;
