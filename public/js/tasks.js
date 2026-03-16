@@ -1798,7 +1798,11 @@ function renderMemberList() {
 // ★★★ inline onclick を辞める必要がある
 // eslint-disable-next-line no-unused-vars
 function selectMemberInMemberSelectModal(memberId) {
-    selectedMember = memberId;
+    if(selectedMember === memberId) {
+        selectedMember = null;
+    } else {
+        selectedMember = memberId;
+    }
     renderMemberList();
 }
 
@@ -1806,6 +1810,7 @@ function selectMemberInMemberSelectModal(memberId) {
  * 選択中のメンバーをタスクの担当者フィールドに適用
  */
 function applyMemberInMemberSelectModal() {
+    console.log('selectedMember:', selectedMember)
     if (selectedMember) {
         const member = MEMBERS.find((m) => m.id === selectedMember);
         if (member) {
