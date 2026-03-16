@@ -314,6 +314,10 @@
         </div>
     </div>
     @push('scripts')
+        <script>
+            window.CURRENT_USER = @json($currentUser->name);
+            window.MEMBERS = @json($users->map(fn($u) => ['id' => $u->id, 'name' => $u->name]));
+        </script>
         <script src="{{ asset('js/tasks.js') }}"></script>
     @endpush
 @endsection
