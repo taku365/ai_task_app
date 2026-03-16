@@ -70,7 +70,8 @@ class TaskController extends Controller
         $tasks = $this->getFilteredTasks($currentUser, $filter);
 
         // 全ユーザーを取得
-        $users = User::select('id', 'name')->get();
+        $users = User::select('id', 'name')->get()->sortByDesc(fn($u) => $u->id === $currentUser->id)->values();
+
 
         // JSONレスポンスを返す（画面ではなくデータ）
         return response()->json([
@@ -89,8 +90,8 @@ class TaskController extends Controller
         $filter = $request->query('filter', 'self');
         $tasks = $this->getFilteredTasks($currentUser, $filter);
 
-        // 全ユーザーを取得
-        $users = User::select('id', 'name')->get();
+        // 全ユーザーを取得　sortByDesc() は「指定した条件の結果を基準に降順で並べる」
+        $users = User::select('id', 'name')->get()->sortByDesc(fn($u) => $u->id === $currentUser->id)->values();
 
         // Bladeテンプレートにデータを渡してHTMLを生成
         return view('tasks.index', compact('tasks', 'filter', 'currentUser', 'users'));
