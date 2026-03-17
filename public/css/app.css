@@ -195,6 +195,10 @@ body {
     color: #f39c12;
 }
 
+.task-meta-item.overdue-date {
+    color: #e74c3c;
+}
+
 /* 音声入力ボタン */
 .voice-input-btn {
     position: fixed;

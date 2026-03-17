@@ -1741,6 +1741,17 @@ function renderTaskItem(task, isCompleted = false, groupType = null) {
         dateTimeDisplay = task.time ? `${task.date} ${task.time}` : task.date;
     }
 
+    // 期限切れ判定（完了済みは除く）
+    const isOverdue = !isCompleted && (() => {
+        if (!task.dueDate) return false;
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const taskDate = new Date(task.dueDate);
+        taskDate.setHours(0, 0, 0, 0);
+        return taskDate < today;
+    })();
+    const overdueDateClass = isOverdue ? "overdue-date" : "";
+
     return `
         <div class="task-item ${completedClass}" onclick="openTaskDetailModal(${task.id})">
             ${isCompleted ? renderCompletedInfo(task, checkboxContent, getPriorityClass(task.priority)) : ""}
@@ -1752,7 +1763,7 @@ function renderTaskItem(task, isCompleted = false, groupType = null) {
                 ${
                     dateTimeDisplay
                         ? `
-                <div class="task-meta-item">
+                <div class="task-meta-item ${overdueDateClass}">
                     <i class="far fa-calendar"></i>
                     <span>${dateTimeDisplay}</span>
                 </div>
