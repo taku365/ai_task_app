@@ -518,10 +518,13 @@ function renderTaskList(tasks, filter) {
                 return header + taskItems;
             })
             .join("");
-    } else {
-        // completed は従来通りの表示
+    } else if (filter === "completed") {
         container.innerHTML = tasks
-            .map((task) => renderTaskItem(task, isCompleted))
+            .map((task) => renderTaskItem(task, true))
+            .join("");
+    } else {
+        container.innerHTML = tasks
+            .map((task) => renderTaskItem(task, task.completedFlg))
             .join("");
     }
 }
