@@ -9,9 +9,9 @@
         <div class="header">
             <div class="header-top">
                 <h1>タスク</h1>
-                <button class="filter-toggle-btn" id="filterToggleBtn">
+                <button class="search-filter-toggle-btn" id="searchFilterToggleBtn">
                     <i class="fas fa-sliders-h"></i>
-                    <span id="filterBtnLabel">絞り込み</span>
+                    <span id="searchFilterBtnLabel">絞り込み</span>
                 </button>
             </div>
         </div>
@@ -33,19 +33,19 @@
         </div>
 
         <!-- フィルターパネル（折りたたみ） -->
-        <div class="filter-panel" id="filterPanel">
-            <div class="filter-panel-inner">
-                <select class="filter-select" id="assigneeFilter">
+        <div class="search-filter-panel" id="searchFilterPanel">
+            <div class="search-filter-panel-inner">
+                <select class="search-filter-select" id="searchAssigneeFilter">
                     <option value="">担当者</option>
                 </select>
-                <select class="filter-select" id="priorityFilter">
+                <select class="search-filter-select" id="searchPriorityFilter">
                     <option value="">優先度</option>
                     <option value="high">高</option>
                     <option value="medium">中</option>
                     <option value="low">低</option>
                     <option value="none">指定なし</option>
                 </select>
-                <select class="filter-select" id="dueFilter">
+                <select class="search-filter-select" id="searchDueFilter">
                     <option value="">期限</option>
                     <option value="today">今日</option>
                     <option value="tomorrow">明日まで</option>

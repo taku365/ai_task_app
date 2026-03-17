@@ -2,8 +2,6 @@
 // 0. 設定（定数）
 //==============================================================================
 
-const { default: laravel } = require("laravel-vite-plugin");
-
 /** タスク担当者として選択可能なメンバーリスト */
 let MEMBERS = window.MEMBERS || [];
 /** 現在のログインユーザー名 */
@@ -674,17 +672,19 @@ function setupEventListeners() {
             const filter = e.target.dataset.filter;
 
             // 絞り込みフィルターパネルのセレクトをリセット
-            const priorityFilter = document.getElementById("priorityFilter");
-            const dueFilter = document.getElementById("dueFilter");
-            if (priorityFilter) priorityFilter.value = "";
-            if (dueFilter) dueFilter.value = "";
+            const searchPriorityFilter = document.getElementById(
+                "searchPriorityFilter",
+            );
+            const searchDueFilter = document.getElementById("searchDueFilter");
+            if (searchPriorityFilter) searchPriorityFilter.value = "";
+            if (searchDueFilter) searchDueFilter.value = "";
             document
-                .querySelectorAll(".filter-select")
+                .querySelectorAll(".search-filter-select")
                 .forEach((el) => el.classList.remove("active"));
 
             // タブに応じて担当者ドロップダウンを更新
-            updateAssigneeFilterForTab(filter);
-            updateFilterToggleBtnState();
+            updateSearchAssigneeFilter(filter);
+            updateSearchFilterBtnState();
 
             // フィルタ条件に応じてタスクを追加
             filterTasks(filter);
@@ -1672,13 +1672,15 @@ async function filterTasks(filter) {
     try {
         // タスク一覧取得APIにリクエストを送信（フィルター条件付き）
         // const response = await fetch(`/api/tasks?filter=${filter}`);
-        const assigneeFilter = document.getElementById("assigneeFilter");
-        const assigneeName = assigneeFilter?.disabled
+        const searchAssigneeFilter = document.getElementById(
+            "searchAssigneeFilter",
+        );
+        const assigneeName = searchAssigneeFilter?.disabled
             ? CURRENT_USER
-            : assigneeFilter?.value || "";
+            : searchAssigneeFilter?.value || "";
         const priorityLabel =
-            document.getElementById("priorityFilter")?.value || "";
-        const due = document.getElementById("dueFilter")?.value || "";
+            document.getElementById("searchPriorityFilter")?.value || "";
+        const due = document.getElementById("searchDueFilter")?.value || "";
 
         const assigneeId = assigneeName
             ? MEMBERS.find((m) => m.name === assigneeName)?.id || ""
@@ -2187,31 +2189,72 @@ function clearDateSelection() {
 //==============================================================================
 
 /**
- * フィルターパネルの開閉
+ *  検索フィルタパネルの開閉
  */
-function toggleFilter() {
-    const panel = document.getElementById("filterPanel");
+function toggleSearchFilter() {
+    const panel = document.getElementById("searchFilterPanel");
     panel.classList.toggle("open");
 }
 
 /**
+ * 検索フィルター変更時の処理
+ */
+function onSearchFilterChange() {
+    document.querySelectorAll(".search-filter-select").forEach((el) => {
+        el.classList.toggle("active", el.value !== "" && !el.disabled);
+    });
+    updateSearchFilterBtnState();
+    filterTasks(currentFilter);
+}
+
+// 検索フィルターのイベント登録
+document.addEventListener("DOMContentLoaded", () => {
+    const searchFilterToggleBtn = document.getElementById(
+        "searchFilterToggleBtn",
+    );
+    if (searchFilterToggleBtn) {
+        searchFilterToggleBtn.addEventListener("click", toggleSearchFilter);
+    }
+
+    const searchAssigneeFilter = document.getElementById(
+        "searchAssigneeFilter",
+    );
+    const searchPriorityFilter = document.getElementById(
+        "searchPriorityFilter",
+    );
+    const searchDueFilter = document.getElementById("searchDueFilter");
+
+    if (searchAssigneeFilter)
+        searchAssigneeFilter.addEventListener("change", onSearchFilterChange);
+    if (searchPriorityFilter)
+        searchPriorityFilter.addEventListener("change", onSearchFilterChange);
+    if (searchDueFilter)
+        searchDueFilter.addEventListener("change", onSearchFilterChange);
+
+    // 初期タブ（self）に合わせて担当者ドロップダウンを設定
+    updateSearchAssigneeFilter("self");
+});
+
+/**
  * タブに応じて担当者ドロップダウンを更新 'self'は ログインユーザーを固定
  */
-function updateAssigneeFilterForTab(filter) {
-    const assigneeFilter = document.getElementById("assigneeFilter");
-    if (!assigneeFilter) return;
+function updateSearchAssigneeFilter(filter) {
+    const searchAssigneeFilter = document.getElementById(
+        "searchAssigneeFilter",
+    );
+    if (!searchAssigneeFilter) return;
 
-    assigneeFilter.innerHTML = "";
-    assigneeFilter.classList.remove("active");
+    searchAssigneeFilter.innerHTML = "";
+    searchAssigneeFilter.classList.remove("active");
 
     if (filter === "self") {
         const opt = document.createElement("option");
         opt.value = CURRENT_USER;
         opt.textContent = CURRENT_USER;
-        assigneeFilter.appendChild(opt);
-        assigneeFilter.disabled = true;
+        searchAssigneeFilter.appendChild(opt);
+        searchAssigneeFilter.disabled = true;
     } else if (filter === "member") {
-        assigneeFilter.disabled = false;
+        searchAssigneeFilter.disabled = false;
         const members = MEMBERS.filter((m) => m.name !== CURRENT_USER);
         [
             { value: "", label: "担当者" },
@@ -2220,10 +2263,10 @@ function updateAssigneeFilterForTab(filter) {
             const opt = document.createElement("option");
             opt.value = value;
             opt.textContent = label;
-            assigneeFilter.appendChild(opt);
+            searchAssigneeFilter.appendChild(opt);
         });
     } else {
-        assigneeFilter.disabled = false;
+        searchAssigneeFilter.disabled = false;
         [
             { value: "", label: "担当者" },
             ...MEMBERS.map((m) => ({ value: m.name, label: m.name })),
@@ -2231,7 +2274,7 @@ function updateAssigneeFilterForTab(filter) {
             const opt = document.createElement("option");
             opt.value = value;
             opt.textContent = label;
-            assigneeFilter.appendChild(opt);
+            searchAssigneeFilter.appendChild(opt);
         });
     }
 }
@@ -2239,19 +2282,21 @@ function updateAssigneeFilterForTab(filter) {
 /**
  * 絞り込みボタンの状態を更新（絞り込み中ラベルの切り替え）
  */
-function updateFilterToggleBtnState() {
-    const assigneeFilter = document.getElementById("assigneeFilter");
-    const priority = document.getElementById("priorityFilter").value;
-    const due = document.getElementById("dueFilter").value;
+function updateSearchFilterBtnState() {
+    const searchAssigneeFilter = document.getElementById(
+        "searchAssigneeFilter",
+    );
+    const priority = document.getElementById("searchPriorityFilter").value;
+    const due = document.getElementById("searchDueFilter").value;
     const hasFilter =
-        (!assigneeFilter.disabled && assigneeFilter.value !== "") ||
+        (!searchAssigneeFilter.disabled && searchAssigneeFilter.value !== "") ||
         priority !== "" ||
         due !== "";
 
     document
-        .getElementById("filterToggleBtn")
+        .getElementById("searchFilterToggleBtn")
         .classList.toggle("has-filter", hasFilter);
-    document.getElementById("filterBtnLabel").textContent = hasFilter
+    document.getElementById("searchFilterBtnLabel").textContent = hasFilter
         ? "絞り込み中"
         : "絞り込み";
 }
