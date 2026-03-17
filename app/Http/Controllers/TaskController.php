@@ -326,7 +326,8 @@ class TaskController extends Controller
 
             // 3. データ変換 (日付, 担当者, 優先度)
             $dueDate = $this->convertDateStringToDate($validated['date'] ?? null);
-            $dueTime = $this->convertTimeStringToTime($validated['time'] ?? null);
+            // 日付がない場合は時間も無効にする
+            $dueTime = $dueDate ? $this->convertTimeStringToTime($validated['time'] ?? null) : null;
             $assigneeId = $this->findUserIdByName($validated['assignee'] ?? null);
             $priorityId = $this->findPriorityIdByName($validated['priority'] ?? null);
 
@@ -379,11 +380,15 @@ class TaskController extends Controller
             $task = Task::findOrFail($id);
 
             // 3. DB更新
+            $dueDate = $this->convertDateStringToDate($validated['date'] ?? null);
+            // 日付がない場合は時間も無効にする
+            $dueTime = $dueDate ? $this->convertTimeStringToTime($validated['time'] ?? null) : null;
+
             $task->update([
                 'ai_task' => $validated['ai_task'],
                 'text_input' => $validated['text_input'],
-                'due_date' => $this->convertDateStringToDate($validated['date'] ?? null),
-                'due_time' => $this->convertTimeStringToTime($validated['time'] ?? null),
+                'due_date' => $dueDate,
+                'due_time' => $dueTime,
                 'assignee_id' => $this->findUserIdByName($validated['assignee'] ?? null),
                 'priority_id' => $this->findPriorityIdByName($validated['priority'] ?? null),
             ]);

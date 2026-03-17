@@ -1158,7 +1158,8 @@ async function createNewTask() {
             currentTask.date = manualDate;
         }
 
-        currentTask.time = manualTime;
+        // 日付なしの場合は時間も無効にする
+        currentTask.time = (currentTask.date && currentTask.date !== "指定なし") ? manualTime : null;
 
         const manualAssignee =
             document.getElementById("detailAssignee").textContent;
@@ -1247,7 +1248,8 @@ async function editTask() {
         const manualTime = detailDateElement.dataset.time || null;
 
         currentTask.date = manualDate || "指定なし";
-        currentTask.time = manualTime;
+        // 日付なしの場合は時間も無効にする
+        currentTask.time = (currentTask.date && currentTask.date !== "指定なし") ? manualTime : null;
 
         const manualAssignee =
             document.getElementById("detailAssignee").textContent;
@@ -1454,7 +1456,8 @@ async function completeTask() {
     const manualTime = detailDateElement.dataset.time || null;
 
     currentTask.date = manualDate || "指定なし";
-    currentTask.time = manualTime;
+    // 日付なしの場合は時間も無効にする
+    currentTask.time = (currentTask.date && currentTask.date !== "指定なし") ? manualTime : null;
 
     const manualAssignee =
         document.getElementById("detailAssignee").textContent;
