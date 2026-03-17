@@ -328,6 +328,17 @@
         </div>
     </div>
 
+    <!-- 削除確認モーダル -->
+    <div class="confirm-modal" id="deleteConfirmModal">
+        <div class="confirm-modal-content">
+            <p class="confirm-modal-message">このタスクを削除しますか？</p>
+            <div class="confirm-modal-actions">
+                <button class="confirm-modal-btn cancel" id="deleteConfirmCancelBtn">キャンセル</button>
+                <button class="confirm-modal-btn delete" id="deleteConfirmOkBtn">削除する</button>
+            </div>
+        </div>
+    </div>
+
     <!-- アラートモーダル -->
     <div class="alert-modal" id="alertModal">
         <div class="alert-modal-content">

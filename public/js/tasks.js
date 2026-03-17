@@ -776,6 +776,21 @@ function setupEventListeners() {
         });
     }
 
+    const deleteConfirmCancelBtn = document.getElementById("deleteConfirmCancelBtn");
+    if (deleteConfirmCancelBtn) {
+        deleteConfirmCancelBtn.addEventListener("click", closeDeleteConfirm);
+    }
+
+    const deleteConfirmOkBtn = document.getElementById("deleteConfirmOkBtn");
+    if (deleteConfirmOkBtn) {
+        deleteConfirmOkBtn.addEventListener("click", () => {
+            if (deleteConfirmCallback) {
+                deleteConfirmCallback();
+            }
+            closeDeleteConfirm();
+        });
+    }
+
     // 保存ボタン（モーダル）ボタン
     const saveTaskBtn = document.getElementById("saveTaskBtn");
     if (saveTaskBtn) {
@@ -831,6 +846,22 @@ function showAlert(
 
     alertCallback = callback;
     openModal("alertModal");
+}
+
+/**
+ * 削除確認モーダルを表示
+ * @param {Function} callback - 削除確認時に実行するコールバック
+ */
+let deleteConfirmCallback = null;
+
+function showDeleteConfirm(callback) {
+    deleteConfirmCallback = callback;
+    document.getElementById("deleteConfirmModal").classList.add("active");
+}
+
+function closeDeleteConfirm() {
+    deleteConfirmCallback = null;
+    document.getElementById("deleteConfirmModal").classList.remove("active");
 }
 
 //==============================================================================
@@ -1316,10 +1347,8 @@ function deleteTask() {
         return;
     }
 
-    // 自分のタスクの場合は通常の確認ダイアログを表示
-    if (confirm("このタスクを削除しますか?")) {
-        executeDeleteTask();
-    }
+    // 自分・未割当・完了タスクの場合は削除確認モーダルを表示
+    showDeleteConfirm(() => executeDeleteTask());
 }
 
 /**

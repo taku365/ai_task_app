@@ -1245,6 +1245,77 @@ body {
 }
 
 /* アラートモーダル */
+/* 削除確認モーダル */
+.confirm-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.4);
+    z-index: 2000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+}
+
+.confirm-modal.active {
+    display: flex;
+}
+
+.confirm-modal-content {
+    background-color: #fff;
+    width: 100%;
+    max-width: 280px;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    animation: alertSlideUp 0.25s ease-out;
+}
+
+.confirm-modal-message {
+    font-size: 15px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin: 0 0 20px;
+    line-height: 1.5;
+}
+
+.confirm-modal-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.confirm-modal-btn {
+    flex: 1;
+    padding: 10px;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.confirm-modal-btn.cancel {
+    background-color: #f0f0f0;
+    color: #7f8c8d;
+}
+
+.confirm-modal-btn.cancel:hover {
+    background-color: #e0e0e0;
+}
+
+.confirm-modal-btn.delete {
+    background-color: #e74c3c;
+    color: #fff;
+}
+
+.confirm-modal-btn.delete:hover {
+    background-color: #c0392b;
+}
+
 .alert-modal {
     display: none;
     position: fixed;
