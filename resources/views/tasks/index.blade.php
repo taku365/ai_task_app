@@ -9,10 +9,10 @@
         <div class="header">
             <div class="header-top">
                 <h1>タスク</h1>
-                <button class="search-filter-toggle-btn" id="searchFilterToggleBtn">
-                    <i class="fas fa-sliders-h"></i>
-                    <span id="searchFilterBtnLabel">絞り込み</span>
-                </button>
+                <div class="header-icons">
+                    <i class="fas fa-search" id="searchFilterToggleBtn"></i>
+                    <i class="fas fa-bell"></i>
+                </div>
             </div>
         </div>
 

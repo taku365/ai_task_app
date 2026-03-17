@@ -2344,7 +2344,4 @@ function updateSearchFilterBtnState() {
     document
         .getElementById("searchFilterToggleBtn")
         .classList.toggle("has-filter", hasFilter);
-    document.getElementById("searchFilterBtnLabel").textContent = hasFilter
-        ? "絞り込み中"
-        : "絞り込み";
 }

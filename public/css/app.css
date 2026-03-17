@@ -1850,6 +1850,11 @@ body {
     font-size: 12px;
 }
 
+/* 検索アイコンが絞り込み中のとき赤くなる */
+#searchFilterToggleBtn.has-filter {
+    color: #e74c3c;
+}
+
 .search-filter-panel {
     background-color: #fff;
     border-bottom: 1px solid #e0e0e0;
