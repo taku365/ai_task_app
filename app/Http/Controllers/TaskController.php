@@ -445,10 +445,14 @@ class TaskController extends Controller
             return null;
         }
 
-        // "2026年3月1日" から年月日を取得
+        // パターン① "2026年3月1日" 形式（AIが返す形式）
         if (preg_match('/(\d{4})年(\d{1,2})月(\d{1,2})日/', $dateString, $matches)) {
             // sprintf で "2026-03-01" 形式に整形
             return sprintf('%04d-%02d-%02d', $matches[1], $matches[2], $matches[3]);
+        }
+        // パターン② "2026-03-01" または "2026-03-01 00:00:00" 形式（DBの値をそのまま送った場合）
+        if (preg_match('/^(\d{4}-\d{2}-\d{2})/', $dateString, $matches)) {
+            return $matches[1];
         }
 
         return null;

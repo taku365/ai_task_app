@@ -366,7 +366,6 @@ function groupUnassignedTasks(tasks) {
     };
 
     tasks.forEach((task) => {
-        console.log("dueDate:", task.dueDate);
         if (task.assignee === "指定なし") {
             // 担当者未設定
             groups.noAssignee.push(task);
@@ -902,7 +901,7 @@ function openTaskDetailModal(taskId) {
     const detailDate = document.getElementById("detailDate");
     const displayText = task.time ? `${task.date} ${task.time}` : task.date;
     detailDate.textContent = displayText;
-    detailDate.dataset.date = task.date;
+    detailDate.dataset.date = task.dueDate || "";
     detailDate.dataset.time = task.time || "";
 
     document.getElementById("detailAssignee").textContent =
@@ -1398,6 +1397,9 @@ async function completeTask() {
     const detailDateElement = document.getElementById("detailDate");
     const manualDate =
         detailDateElement.dataset.date || detailDateElement.textContent;
+    console.log("dataset.date:", detailDateElement.dataset.date);
+    console.log("textContent:", detailDateElement.textContent);
+    console.log("manualDate:", manualDate);
     const manualTime = detailDateElement.dataset.time || null;
 
     currentTask.date = manualDate || "指定なし";
