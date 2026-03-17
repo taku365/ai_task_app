@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>タスク管理アプリ 検索機能 実装提案</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Helvetica Neue', Arial, 'Hiragino Sans', 'Yu Gothic', sans-serif;
+    background: #1a1a2e;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  /* ───── コントロール ───── */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+  .controls button {
+    background: #fff;
+    border: none;
+    border-radius: 50%;
+    width: 40px; height: 40px;
+    font-size: 18px;
+    cursor: pointer;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    transition: background 0.2s;
+  }
+  .controls button:hover { background: #e8f0fe; }
+  .controls button:disabled { opacity: 0.3; cursor: default; }
+  .slide-counter {
+    color: #fff;
+    font-size: 14px;
+    min-width: 60px;
+    text-align: center;
+  }
+
+  /* ───── スライドラッパー ───── */
+  .slide-wrapper {
+    width: 960px;
+    height: 540px;
+    position: relative;
+    box-shadow: 0 8px 40px rgba(0,0,0,0.5);
+    border-radius: 4px;
+    overflow: hidden;
+    background: #fff;
+  }
+
+  .slide {
+    display: none;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0; left: 0;
+  }
+  .slide.active { display: flex; }
+
+  /* ───── キーボードヒント ───── */
+  .hint {
+    color: #888;
+    font-size: 12px;
+    margin-top: 12px;
+  }
+
+  /* ═══════════════════════════════════
+     共通レイアウト部品
+  ═══════════════════════════════════ */
+  .slide-body {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .top-bar {
+    height: 8px;
+    background: linear-gradient(90deg, #4285F4, #34A853);
+    flex-shrink: 0;
+  }
+
+  .slide-header {
+    padding: 28px 48px 16px;
+    border-bottom: 2px solid #e8eaed;
+    flex-shrink: 0;
+  }
+  .slide-header h2 {
+    font-size: 26px;
+    font-weight: 700;
+    color: #1a73e8;
+    letter-spacing: -0.3px;
+  }
+
+  .slide-content {
+    flex: 1;
+    padding: 24px 48px;
+    overflow: hidden;
+  }
+
+  .slide-footer {
+    padding: 8px 48px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-top: 1px solid #e8eaed;
+    font-size: 11px;
+    color: #9aa0a6;
+    flex-shrink: 0;
+  }
+
+  /* ═══════════════════════════════════
+     スライド 1 ｜タイトル
+  ═══════════════════════════════════ */
+  #slide-1 {
+    background: linear-gradient(135deg, #1a73e8 0%, #0d47a1 100%);
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+  }
+  #slide-1 .title-logo {
+    font-size: 13px;
+    color: rgba(255,255,255,0.7);
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 20px;
+  }
+  #slide-1 h1 {
+    font-size: 38px;
+    font-weight: 800;
+    color: #fff;
+    line-height: 1.3;
+    margin-bottom: 20px;
+  }
+  #slide-1 .subtitle {
+    font-size: 18px;
+    color: rgba(255,255,255,0.8);
+    margin-bottom: 40px;
+  }
+  #slide-1 .date-badge {
+    background: rgba(255,255,255,0.15);
+    border: 1px solid rgba(255,255,255,0.3);
+    color: #fff;
+    padding: 8px 24px;
+    border-radius: 20px;
+    font-size: 14px;
+  }
+  #slide-1 .slide-num { position: absolute; bottom: 16px; right: 24px; color: rgba(255,255,255,0.4); font-size: 12px; }
+
+  /* ═══════════════════════════════════
+     共通：bullet list
+  ═══════════════════════════════════ */
+  .bullet-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+  .bullet-list li {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    font-size: 16px;
+    color: #3c4043;
+    line-height: 1.5;
+  }
+  .bullet-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: #1a73e8;
+    margin-top: 6px;
+    flex-shrink: 0;
+  }
+
+  /* ═══════════════════════════════════
+     共通：highlight box
+  ═══════════════════════════════════ */
+  .highlight-box {
+    background: #e8f0fe;
+    border-left: 4px solid #1a73e8;
+    border-radius: 4px;
+    padding: 14px 18px;
+    font-size: 15px;
+    color: #1a73e8;
+    font-weight: 600;
+    line-height: 1.5;
+  }
+
+  /* ═══════════════════════════════════
+     共通：table
+  ═══════════════════════════════════ */
+  .spec-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+  }
+  .spec-table th {
+    background: #1a73e8;
+    color: #fff;
+    padding: 10px 16px;
+    text-align: left;
+    font-weight: 600;
+  }
+  .spec-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid #e8eaed;
+    color: #3c4043;
+    vertical-align: top;
+  }
+  .spec-table tr:nth-child(even) td { background: #f8f9fa; }
+
+  /* ═══════════════════════════════════
+     共通：tag / badge
+  ═══════════════════════════════════ */
+  .tag {
+    display: inline-block;
+    padding: 3px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .tag-blue  { background: #e8f0fe; color: #1a73e8; }
+  .tag-green { background: #e6f4ea; color: #34a853; }
+  .tag-gray  { background: #f1f3f4; color: #5f6368; }
+
+  /* ═══════════════════════════════════
+     スライド 2｜背景
+  ═══════════════════════════════════ */
+  .two-col { display: flex; gap: 32px; }
+  .col { flex: 1; }
+
+  /* ═══════════════════════════════════
+     スライド 3｜アクセス方法
+  ═══════════════════════════════════ */
+  .nav-demo {
+    background: #f8f9fa;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 8px 0;
+  }
+  .nav-demo-row {
+    display: flex;
+    justify-content: space-around;
+    padding: 16px 24px;
+    font-size: 15px;
+    color: #5f6368;
+  }
+  .nav-demo-row.after { border-top: 2px dashed #1a73e8; }
+  .nav-active { color: #1a73e8; font-weight: 700; }
+  .nav-demo-label {
+    font-size: 11px;
+    color: #9aa0a6;
+    padding: 4px 24px 8px;
+  }
+
+  /* ═══════════════════════════════════
+     スライド 4｜UI
+  ═══════════════════════════════════ */
+  .screenshot-placeholder {
+    border: 2px dashed #dadce0;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    color: #9aa0a6;
+    font-size: 13px;
+    text-align: center;
+    padding: 12px;
+  }
+  .screenshot-placeholder .icon { font-size: 28px; }
+
+  /* ═══════════════════════════════════
+     スライド 5｜キーワード
+  ═══════════════════════════════════ */
+  .feature-cards { display: flex; flex-direction: column; gap: 10px; }
+  .feature-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    padding: 12px 16px;
+  }
+  .feature-card-icon {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: #1a73e8;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    flex-shrink: 0;
+  }
+  .feature-card-label { font-size: 13px; font-weight: 700; color: #1a73e8; margin-bottom: 2px; }
+  .feature-card-desc  { font-size: 14px; color: #3c4043; }
+
+  /* ═══════════════════════════════════
+     スライド 7｜完了済み
+  ═══════════════════════════════════ */
+  .steps { display: flex; flex-direction: column; gap: 0; }
+  .step-item { display: flex; gap: 16px; align-items: flex-start; }
+  .step-line-wrap { display: flex; flex-direction: column; align-items: center; }
+  .step-circle {
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    background: #1a73e8;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .step-line { width: 2px; height: 24px; background: #dadce0; }
+  .step-text { padding: 4px 0 20px; }
+  .step-text strong { font-size: 14px; color: #1a73e8; display: block; margin-bottom: 2px; }
+  .step-text span { font-size: 13px; color: #3c4043; line-height: 1.4; }
+
+  /* ═══════════════════════════════════
+     スライド 9｜スコープ
+  ═══════════════════════════════════ */
+  .scale-tag-sm  { background: #e6f4ea; color: #34a853; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+  .scale-tag-md  { background: #fef7e0; color: #f9ab00; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+  .scale-tag-na  { background: #f1f3f4; color: #9aa0a6; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: 600; }
+
+  /* ═══════════════════════════════════
+     スライド 10｜拡張案
+  ═══════════════════════════════════ */
+  .expansion-cards { display: flex; gap: 24px; }
+  .expansion-card {
+    flex: 1;
+    border: 1px solid #dadce0;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .expansion-card-header {
+    background: #1a73e8;
+    color: #fff;
+    padding: 14px 20px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+  .expansion-card-body {
+    padding: 16px 20px;
+    font-size: 14px;
+    color: #3c4043;
+    line-height: 1.7;
+  }
+  .expansion-card-note {
+    margin-top: 10px;
+    font-size: 12px;
+    color: #9aa0a6;
+    background: #f8f9fa;
+    border-radius: 4px;
+    padding: 8px 12px;
+  }
+</style>
+</head>
+<body>
+
+<div class="controls">
+  <button id="prevBtn" onclick="changeSlide(-1)" disabled>&#8592;</button>
+  <span class="slide-counter"><span id="current">1</span> / <span id="total"></span></span>
+  <button id="nextBtn" onclick="changeSlide(1)">&#8594;</button>
+</div>
+
+<div class="slide-wrapper">
+
+  <!-- ══════════════════════════════
+       スライド 1｜タイトル
+  ══════════════════════════════ -->
+  <div class="slide active" id="slide-1">
+    <div class="title-logo">AI Task App</div>
+    <h1>タスク管理アプリ<br>検索機能 実装提案</h1>
+    <div class="subtitle">担当者・キーワード・期限での横断検索</div>
+    <div class="date-badge">2026.03.16</div>
+    <div class="slide-num">1</div>
+  </div>
+
+  <!-- ══════════════════════════════
+       スライド 2｜背景・目的
+  ══════════════════════════════ -->
+  <div class="slide" id="slide-2">
+    <div class="slide-body">
+      <div class="top-bar"></div>
+      <div class="slide-header"><h2>なぜ検索機能が必要か</h2></div>
+      <div class="slide-content">
+        <div class="two-col" style="height:100%">
+          <div class="col">
+            <p style="font-size:13px;color:#9aa0a6;margin-bottom:10px;font-weight:600;letter-spacing:1px;">PROBLEM</p>
+            <ul class="bullet-list">
+              <li><span class="bullet-dot"></span>現在はタブ切り替えで表示を絞るしかない<br><span style="font-size:13px;color:#9aa0a6;">（自分 / メンバー / 未割当 / 完了）</span></li>
+              <li><span class="bullet-dot"></span>タスク数が増えると目的のタスクを見つけにくい</li>
+              <li><span class="bullet-dot"></span>タブをまたいで横断的に検索できる手段がない</li>
+            </ul>
+          </div>
+          <div class="col" style="display:flex;flex-direction:column;justify-content:center;">
+            <p style="font-size:13px;color:#9aa0a6;margin-bottom:10px;font-weight:600;letter-spacing:1px;">SOLUTION</p>
+            <div class="highlight-box">
+              🎯 タスク名・担当者名・キーワードから<br>素早くタスクを見つけられるようにする
+            </div>
+            <div style="margin-top:16px;background:#e6f4ea;border-left:4px solid #34a853;border-radius:4px;padding:14px 18px;font-size:14px;color:#34a853;font-weight:600;">
+              ✅ フィルタータブをまたいで全件横断検索
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>AI Task App ｜ 検索機能実装提案</span><span>2</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       スライド 3｜アクセス方法
+  ══════════════════════════════ -->
+  <div class="slide" id="slide-3">
+    <div class="slide-body">
+      <div class="top-bar"></div>
+      <div class="slide-header"><h2>どこから使うか</h2></div>
+      <div class="slide-content">
+        <p style="font-size:16px;color:#3c4043;margin-bottom:20px;">ボトムナビゲーションに「検索」タブを追加する</p>
+        <div class="nav-demo">
+          <div class="nav-demo-label">変更前</div>
+          <div class="nav-demo-row">
+            <span>📋 タスク</span>
+            <span>⚙️ 設定</span>
+          </div>
+          <div class="nav-demo-label" style="color:#1a73e8;border-top:2px dashed #dadce0;padding-top:8px;">変更後</div>
+          <div class="nav-demo-row after">
+            <span>📋 タスク</span>
+            <span class="nav-active">🔍 検索</span>
+            <span>⚙️ 設定</span>
+          </div>
+        </div>
+        <div style="margin-top:20px;display:flex;align-items:center;gap:12px;font-size:15px;color:#3c4043;">
+          <span style="background:#1a73e8;color:#fff;border-radius:50%;width:28px;height:28px;display:inline-flex;align-items:center;justify-content:center;font-size:16px;">🔍</span>
+          検索アイコンをタップ →
+          <strong style="color:#1a73e8;">検索専用ページへ遷移</strong>
+        </div>
+      </div>
+      <div class="slide-footer"><span>AI Task App ｜ 検索機能実装提案</span><span>3</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       スライド 4｜UI
+  ══════════════════════════════ -->
+  <div class="slide" id="slide-4">
+    <div class="slide-body">
+      <div class="top-bar"></div>
+      <div class="slide-header"><h2>検索ページ UI</h2></div>
+      <div class="slide-content">
+        <div class="two-col" style="height:calc(100% - 8px)">
+          <div class="col screenshot-placeholder" style="height:320px;">
+            <div class="icon">📱</div>
+            <strong>スクショ①</strong>
+            <span>初期表示<br>（何も入力していない状態）</span>
+          </div>
+          <div class="col screenshot-placeholder" style="height:320px;">
+            <div class="icon">🔍</div>
+            <strong>スクショ②</strong>
+            <span>「報告書」入力後の<br>検索結果</span>
+          </div>
+        </div>
+        <p style="font-size:12px;color:#9aa0a6;margin-top:8px;">※ searchTest.html をスマホビューで表示してスクショを貼り付けてください</p>
+      </div>
+      <div class="slide-footer"><span>AI Task App ｜ 検索機能実装提案</span><span>4</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       スライド 5｜キーワード検索
+  ══════════════════════════════ -->
+  <div class="slide" id="slide-5">
+    <div class="slide-body">
+      <div class="top-bar"></div>
+      <div class="slide-header"><h2>キーワード検索の動作</h2></div>
+      <div class="slide-content">
+        <div class="two-col">
+          <div class="col">
+            <div class="feature-cards">
+              <div class="feature-card">
+                <div class="feature-card-icon">🎯</div>
+                <div>
+                  <div class="feature-card-label">検索対象</div>
+                  <div class="feature-card-desc">タスク名・担当者名を部分一致で検索</div>
+                </div>
+              </div>
+              <div class="feature-card">
+                <div class="feature-card-icon">⚡</div>
+                <div>
+                  <div class="feature-card-label">リアルタイム</div>
+                  <div class="feature-card-desc">入力のたびに結果を更新（300ms 待機）</div>
+                </div>
+              </div>
+              <div class="feature-card">
+                <div class="feature-card-icon">✨</div>
+                <div>
+                  <div class="feature-card-label">ハイライト</div>
+                  <div class="feature-card-desc">マッチした文字を黄色でハイライト表示</div>
+                </div>
+              </div>
+              <div class="feature-card">
+                <div class="feature-card-icon">🚫</div>
+                <div>
+                  <div class="feature-card-label">0件時</div>
+                  <div class="feature-card-desc">「該当するタスクが見つかりませんでした」を表示</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="col screenshot-placeholder" style="height:280px;">
+            <div class="icon">✨</div>
+            <strong>スクショ③</strong>
+            <span>ハイライト表示されている状態</span>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>AI Task App ｜ 検索機能実装提案</span><span>5</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       スライド 6｜補助フィルター
+  ══════════════════════════════ -->
+  <div class="slide" id="slide-6">
+    <div class="slide-body">
+      <div class="top-bar"></div>
+      <div class="slide-header"><h2>絞り込み条件（補助フィルター）</h2></div>
+      <div class="slide-content">
+        <div class="two-col">
+          <div class="col">
+            <table class="spec-table">
+              <thead>
+                <tr><th>フィルター</th><th>選択肢</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><strong>担当者</strong></td>
+                  <td>すべて / メンバー名一覧<br><span class="tag tag-gray">単一選択</span></td>
+                </tr>
+                <tr>
+                  <td><strong>優先度</strong></td>
+                  <td>すべて / 高 / 中 / 低 / 指定なし</td>
+                </tr>
+                <tr>
+                  <td><strong>期限</strong></td>
+                  <td>すべて / 今日 / 明日まで /<br>今週中 / 期限切れ / 期限なし</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="highlight-box" style="margin-top:14px;font-size:14px;">
+              ✅ キーワードなしで絞り込みのみの使用も可能
+            </div>
+          </div>
+          <div class="col screenshot-placeholder" style="height:280px;">
+            <div class="icon">🔽</div>
+            <strong>スクショ④</strong>
+            <span>フィルター操作の様子</span>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>AI Task App ｜ 検索機能実装提案</span><span>6</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       スライド 7｜完了済み
+  ══════════════════════════════ -->
+  <div class="slide" id="slide-7">
+    <div class="slide-body">
+      <div class="top-bar"></div>
+      <div class="slide-header"><h2>完了済みタスクも検索できる</h2></div>
+      <div class="slide-content">
+        <div class="two-col">
+          <div class="col">
+            <div class="steps">
+              <div class="step-item">
+                <div class="step-line-wrap"><div class="step-circle">1</div><div class="step-line"></div></div>
+                <div class="step-text"><strong>キーワードを入力する</strong><span>通常は未完了タスクを検索</span></div>
+              </div>
+              <div class="step-item">
+                <div class="step-line-wrap"><div class="step-circle">2</div><div class="step-line"></div></div>
+                <div class="step-text"><strong>結果下部のリンクをタップ</strong><span>"〇〇" の完了済みタスクを検索する →</span></div>
+              </div>
+              <div class="step-item">
+                <div class="step-line-wrap"><div class="step-circle">3</div><div class="step-line"></div></div>
+                <div class="step-text"><strong>完了済みタスクで再検索</strong><span>黄色バナーで「完了済み検索中」を表示</span></div>
+              </div>
+              <div class="step-item">
+                <div class="step-line-wrap"><div class="step-circle">4</div></div>
+                <div class="step-text"><strong>「未完了タスクに戻す」で元に戻る</strong><span></span></div>
+              </div>
+            </div>
+          </div>
+          <div class="col" style="display:flex;flex-direction:column;gap:12px;">
+            <div class="screenshot-placeholder" style="flex:1;">
+              <div class="icon">🔗</div>
+              <strong>スクショ⑤</strong>
+              <span>完了済み検索リンク表示</span>
+            </div>
+            <div class="screenshot-placeholder" style="flex:1;">
+              <div class="icon">✅</div>
+              <strong>スクショ⑥</strong>
+              <span>完了済み検索結果＋バナー</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>AI Task App ｜ 検索機能実装提案</span><span>7</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       スライド 8｜検索範囲
+  ══════════════════════════════ -->
+  <div class="slide" id="slide-8">
+    <div class="slide-body">
+      <div class="top-bar"></div>
+      <div class="slide-header"><h2>何を検索対象とするか</h2></div>
+      <div class="slide-content">
+        <div style="display:flex;flex-direction:column;gap:14px;margin-bottom:20px;">
+          <div style="display:flex;align-items:center;gap:16px;background:#e8f0fe;border-radius:8px;padding:16px;">
+            <div style="width:12px;height:48px;background:#1a73e8;border-radius:4px;flex-shrink:0;"></div>
+            <div>
+              <div style="font-size:15px;font-weight:700;color:#1a73e8;margin-bottom:4px;">通常検索</div>
+              <div style="font-size:14px;color:#3c4043;">未完了タスク全件（タブをまたいで横断的に検索）</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;background:#e6f4ea;border-radius:8px;padding:16px;">
+            <div style="width:12px;height:48px;background:#34a853;border-radius:4px;flex-shrink:0;"></div>
+            <div>
+              <div style="font-size:15px;font-weight:700;color:#34a853;margin-bottom:4px;">完了済み検索</div>
+              <div style="font-size:14px;color:#3c4043;">完了済みタスク全件（「完了済みを検索」タップ時）</div>
+            </div>
+          </div>
+          <div style="display:flex;align-items:center;gap:16px;background:#f1f3f4;border-radius:8px;padding:16px;">
+            <div style="width:12px;height:48px;background:#9aa0a6;border-radius:4px;flex-shrink:0;"></div>
+            <div>
+              <div style="font-size:15px;font-weight:700;color:#9aa0a6;margin-bottom:4px;">削除済みタスク</div>
+              <div style="font-size:14px;color:#3c4043;">対象外（ソフトデリート済みは除外）</div>
+            </div>
+          </div>
+        </div>
+        <div class="highlight-box" style="font-size:13px;">
+          既存のフィルタータブ・詳細モーダルは変更なし。検索とは独立した機能として共存する。
+        </div>
+      </div>
+      <div class="slide-footer"><span>AI Task App ｜ 検索機能実装提案</span><span>8</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       スライド 9｜実装スコープ
+  ══════════════════════════════ -->
+  <div class="slide" id="slide-9">
+    <div class="slide-body">
+      <div class="top-bar"></div>
+      <div class="slide-header"><h2>実装範囲</h2></div>
+      <div class="slide-content">
+        <table class="spec-table">
+          <thead>
+            <tr><th>対象</th><th>内容</th><th>規模</th></tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>ボトムナビ</strong></td>
+              <td>「検索」タブを追加</td>
+              <td><span class="scale-tag-sm">小</span></td>
+            </tr>
+            <tr>
+              <td><strong>検索ページ</strong></td>
+              <td>新規ページを作成（Blade + JS）</td>
+              <td><span class="scale-tag-md">小〜中</span></td>
+            </tr>
+            <tr>
+              <td><strong>バックエンド</strong></td>
+              <td>検索APIを追加（LIKE検索 + 絞り込み）</td>
+              <td><span class="scale-tag-sm">小</span></td>
+            </tr>
+            <tr>
+              <td><strong>DB</strong></td>
+              <td>変更なし（既存カラムで対応可能）</td>
+              <td><span class="scale-tag-na">ー</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="slide-footer"><span>AI Task App ｜ 検索機能実装提案</span><span>9</span></div>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════
+       スライド 10｜拡張案
+  ══════════════════════════════ -->
+  <div class="slide" id="slide-10">
+    <div class="slide-body">
+      <div class="top-bar"></div>
+      <div class="slide-header"><h2>将来的な拡張案</h2></div>
+      <div class="slide-content">
+        <div class="expansion-cards">
+          <div class="expansion-card">
+            <div class="expansion-card-header">📅 期限の自由入力方式</div>
+            <div class="expansion-card-body">
+              開始日〜終了日を任意で指定できる日付範囲入力。
+              <br><br>
+              既存のカレンダーUIを流用することで実装可能だが、操作ステップが増えるため今回はプリセット方式（今日 / 今週中など）を採用する。
+              <div class="expansion-card-note">ニーズに応じて後から拡張可能</div>
+            </div>
+          </div>
+          <div class="expansion-card">
+            <div class="expansion-card-header">👥 担当者の複数選択</div>
+            <div class="expansion-card-body">
+              現在は1人のみ選択可能（単一選択）。
+              <br><br>
+              「特定の1人のタスクを探す」ユースケースが大半のため今回は採用しない。チームの規模が大きくなった際に検討する。
+              <div class="expansion-card-note">チーム拡大時に検討</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="slide-footer"><span>AI Task App ｜ 検索機能実装提案</span><span>10</span></div>
+    </div>
+  </div>
+
+</div><!-- /.slide-wrapper -->
+
+<div class="hint">← → キーでスライドを移動できます</div>
+
+<script>
+  const slides = document.querySelectorAll('.slide');
+  let current = 0;
+
+  document.getElementById('total').textContent = slides.length;
+
+  function changeSlide(dir) {
+    slides[current].classList.remove('active');
+    current = Math.max(0, Math.min(slides.length - 1, current + dir));
+    slides[current].classList.add('active');
+    document.getElementById('current').textContent = current + 1;
+    document.getElementById('prevBtn').disabled = current === 0;
+    document.getElementById('nextBtn').disabled = current === slides.length - 1;
+  }
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown') changeSlide(1);
+    if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   changeSlide(-1);
+  });
+</script>
+</body>
+</html>
