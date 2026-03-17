@@ -7,12 +7,15 @@
     <div class="screen" id="mainScreen">
         <!-- ヘッダー -->
         <div class="header">
-            <h1>タスク</h1>
-            <div class="header-icons">
-                <i class="fas fa-search"></i>
-                <i class="fas fa-bell"></i>
+            <div class="header-top">
+                <h1>タスク</h1>
+                <button class="search-filter-toggle-btn" id="searchFilterToggleBtn">
+                    <i class="fas fa-sliders-h"></i>
+                    <span id="searchFilterBtnLabel">絞り込み</span>
+                </button>
             </div>
         </div>
+
 
         @php
             $currentFilter = request()->query('filter', 'self');
@@ -25,8 +28,36 @@
             <button class="filter-tab {{ $currentFilter === 'unassigned' ? 'active' : '' }}"
                 data-filter="unassigned">未割当</button>
             <button class="filter-tab {{ $currentFilter === 'completed' ? 'active' : '' }}"
-                data-filter="completed">完了済み</button>
+                data-filter="completed">完了</button>
+            <button class="filter-tab {{ $currentFilter === 'all' ? 'active' : '' }}" data-filter="all">すべて</button>
         </div>
+
+        <!-- フィルターパネル（折りたたみ） -->
+        <div class="search-filter-panel" id="searchFilterPanel">
+            <div class="search-filter-panel-inner">
+                <select class="search-filter-select" id="searchAssigneeFilter">
+                    <option value="">担当者</option>
+                </select>
+                <select class="search-filter-select" id="searchPriorityFilter">
+                    <option value="">優先度</option>
+                    <option value="high">高</option>
+                    <option value="medium">中</option>
+                    <option value="low">低</option>
+                    <option value="none">指定なし</option>
+                </select>
+                <select class="search-filter-select" id="searchDueFilter">
+                    <option value="">期限</option>
+                    <option value="today">今日</option>
+                    <option value="tomorrow">明日まで</option>
+                    <option value="this_week">今週中</option>
+                    <option value="next_week">来週中</option>
+                    <option value="overdue">期限切れ</option>
+                    <option value="none">期限なし</option>
+                </select>
+            </div>
+        </div>
+
+
 
         <!-- タスクリスト -->
         <div class="task-list-container" id="taskListContainer">

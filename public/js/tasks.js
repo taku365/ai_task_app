@@ -517,10 +517,13 @@ function renderTaskList(tasks, filter) {
                 return header + taskItems;
             })
             .join("");
-    } else {
-        // completed は従来通りの表示
+    } else if (filter === "completed") {
         container.innerHTML = tasks
-            .map((task) => renderTaskItem(task, isCompleted))
+            .map((task) => renderTaskItem(task, true))
+            .join("");
+    } else {
+        container.innerHTML = tasks
+            .map((task) => renderTaskItem(task, task.completedFlg))
             .join("");
     }
 }
@@ -666,10 +669,26 @@ function setupEventListeners() {
         deleteTaskBtn.addEventListener("click", deleteTask);
     }
 
-    // ユーザーがフィルターをクリックした際の処理
     document.querySelectorAll(".filter-tab").forEach((tab) => {
         tab.addEventListener("click", (e) => {
             const filter = e.target.dataset.filter;
+
+            // 絞り込みフィルターパネルのセレクトをリセット
+            const searchPriorityFilter = document.getElementById(
+                "searchPriorityFilter",
+            );
+            const searchDueFilter = document.getElementById("searchDueFilter");
+            if (searchPriorityFilter) searchPriorityFilter.value = "";
+            if (searchDueFilter) searchDueFilter.value = "";
+            document
+                .querySelectorAll(".search-filter-select")
+                .forEach((el) => el.classList.remove("active"));
+
+            // タブに応じて担当者ドロップダウンを更新
+            updateSearchAssigneeFilter(filter);
+            updateSearchFilterBtnState();
+
+            // フィルタ条件に応じてタスクを追加
             filterTasks(filter);
         });
     });
@@ -1647,11 +1666,6 @@ async function filterTasks(filter) {
     // 現在のフィルタ変数を更新
     currentFilter = filter;
 
-    // // URLを更新（リロード時に状態を保持するため）
-    // const url = new URL(window.location);
-    // url.searchParams.set("filter", filter); // URLのクエリパラメータfilterに変数のfilterをセットする
-    // window.history.pushState({}, "", url); // ブラウザを再読み込みせず、表示中のURLだけ書き換える
-
     // タブのactive状態を更新（画面の見た目)
     document.querySelectorAll(".filter-tab").forEach((tab) => {
         tab.classList.remove("active");
@@ -1662,7 +1676,30 @@ async function filterTasks(filter) {
 
     try {
         // タスク一覧取得APIにリクエストを送信（フィルター条件付き）
-        const response = await fetch(`/api/tasks?filter=${filter}`);
+        // const response = await fetch(`/api/tasks?filter=${filter}`);
+        const searchAssigneeFilter = document.getElementById(
+            "searchAssigneeFilter",
+        );
+        const assigneeName = searchAssigneeFilter?.disabled
+            ? CURRENT_USER
+            : searchAssigneeFilter?.value || "";
+        const priorityLabel =
+            document.getElementById("searchPriorityFilter")?.value || "";
+        const due = document.getElementById("searchDueFilter")?.value || "";
+
+        const assigneeId = assigneeName
+            ? MEMBERS.find((m) => m.name === assigneeName)?.id || ""
+            : "";
+        const priorityMap = { none: 0, low: 1, medium: 2, high: 3 };
+        const priorityId =
+            priorityLabel !== "" ? priorityMap[priorityLabel] || "" : "";
+
+        const params = new URLSearchParams({ filter });
+        if (assigneeId) params.append("assignee_id", assigneeId);
+        if (priorityId !== "") params.append("priority_id", priorityId);
+        if (due) params.append("due", due);
+
+        const response = await fetch(`/api/tasks?${params.toString()}`);
 
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
@@ -2150,4 +2187,121 @@ function clearDateSelection() {
         detailDate.dataset.time = "";
     }
     closeModal("dateSelectModal");
+}
+
+//==============================================================================
+// 9. 絞り込みフィルター
+//==============================================================================
+
+/**
+ *  検索フィルタパネルの開閉
+ */
+function toggleSearchFilter() {
+    const panel = document.getElementById("searchFilterPanel");
+    panel.classList.toggle("open");
+}
+
+/**
+ * 検索フィルター変更時の処理
+ */
+function onSearchFilterChange() {
+    document.querySelectorAll(".search-filter-select").forEach((el) => {
+        el.classList.toggle("active", el.value !== "" && !el.disabled);
+    });
+    updateSearchFilterBtnState();
+    filterTasks(currentFilter);
+}
+
+// 検索フィルターのイベント登録
+document.addEventListener("DOMContentLoaded", () => {
+    const searchFilterToggleBtn = document.getElementById(
+        "searchFilterToggleBtn",
+    );
+    if (searchFilterToggleBtn) {
+        searchFilterToggleBtn.addEventListener("click", toggleSearchFilter);
+    }
+
+    const searchAssigneeFilter = document.getElementById(
+        "searchAssigneeFilter",
+    );
+    const searchPriorityFilter = document.getElementById(
+        "searchPriorityFilter",
+    );
+    const searchDueFilter = document.getElementById("searchDueFilter");
+
+    if (searchAssigneeFilter)
+        searchAssigneeFilter.addEventListener("change", onSearchFilterChange);
+    if (searchPriorityFilter)
+        searchPriorityFilter.addEventListener("change", onSearchFilterChange);
+    if (searchDueFilter)
+        searchDueFilter.addEventListener("change", onSearchFilterChange);
+
+    // 初期タブ（self）に合わせて担当者ドロップダウンを設定
+    updateSearchAssigneeFilter("self");
+});
+
+/**
+ * タブに応じて担当者ドロップダウンを更新 'self'は ログインユーザーを固定
+ */
+function updateSearchAssigneeFilter(filter) {
+    const searchAssigneeFilter = document.getElementById(
+        "searchAssigneeFilter",
+    );
+    if (!searchAssigneeFilter) return;
+
+    searchAssigneeFilter.innerHTML = "";
+    searchAssigneeFilter.classList.remove("active");
+
+    if (filter === "self") {
+        const opt = document.createElement("option");
+        opt.value = CURRENT_USER;
+        opt.textContent = CURRENT_USER;
+        searchAssigneeFilter.appendChild(opt);
+        searchAssigneeFilter.disabled = true;
+    } else if (filter === "member") {
+        searchAssigneeFilter.disabled = false;
+        const members = MEMBERS.filter((m) => m.name !== CURRENT_USER);
+        [
+            { value: "", label: "担当者" },
+            ...members.map((m) => ({ value: m.name, label: m.name })),
+        ].forEach(({ value, label }) => {
+            const opt = document.createElement("option");
+            opt.value = value;
+            opt.textContent = label;
+            searchAssigneeFilter.appendChild(opt);
+        });
+    } else {
+        searchAssigneeFilter.disabled = false;
+        [
+            { value: "", label: "担当者" },
+            ...MEMBERS.map((m) => ({ value: m.name, label: m.name })),
+        ].forEach(({ value, label }) => {
+            const opt = document.createElement("option");
+            opt.value = value;
+            opt.textContent = label;
+            searchAssigneeFilter.appendChild(opt);
+        });
+    }
+}
+
+/**
+ * 絞り込みボタンの状態を更新（絞り込み中ラベルの切り替え）
+ */
+function updateSearchFilterBtnState() {
+    const searchAssigneeFilter = document.getElementById(
+        "searchAssigneeFilter",
+    );
+    const priority = document.getElementById("searchPriorityFilter").value;
+    const due = document.getElementById("searchDueFilter").value;
+    const hasFilter =
+        (!searchAssigneeFilter.disabled && searchAssigneeFilter.value !== "") ||
+        priority !== "" ||
+        due !== "";
+
+    document
+        .getElementById("searchFilterToggleBtn")
+        .classList.toggle("has-filter", hasFilter);
+    document.getElementById("searchFilterBtnLabel").textContent = hasFilter
+        ? "絞り込み中"
+        : "絞り込み";
 }

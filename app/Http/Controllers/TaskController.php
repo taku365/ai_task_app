@@ -15,7 +15,7 @@ use App\Models\Priority;
 class TaskController extends Controller
 {
     // 一覧取得(共通化メソッド)
-    private function getFilteredTasks(User $currentUser, string $filter)
+    private function getFilteredTasks(User $currentUser, string $filter, array $searchParams = [])
     {
         // タスク取得用のクエリビルダを作成
         $query = Task::with(['assignee', 'priority', 'createdBy', 'completedBy']);
@@ -52,6 +52,57 @@ class TaskController extends Controller
                 $query->whereNotNull('completed_at')
                     ->orderBy('completed_at', 'desc');
                 break;
+
+            // すべて
+            case 'all':
+                $query->orderBy('created_at', 'desc');
+                break;
+        }
+
+        // 担当者フィルタ
+        if (!empty($searchParams['assignee_id'])) {
+            $query->where('assignee_id', $searchParams['assignee_id']);
+        }
+
+        // 優先度フィルタ
+        if (!empty($searchParams['priority_id'])) {
+            $query->where('priority_id', $searchParams['priority_id']);
+        }
+
+        // 期限フィルタ
+        if (!empty($searchParams['due'])) {
+            $today = now()->toDateString();
+            $tomorrow = now()->addDay()->toDateString();
+            $thisWeekEnd = now()->endOfWeek(0)->toDateString(); // 日曜
+            $nextWeekEnd = now()->addWeek()->endOfWeek(0)->toDateString();
+
+            switch ($searchParams['due']) {
+                // 期限なし
+                case 'none':
+                    $query->whereNull('due_date');
+                    break;
+                // 期限切れ
+                case 'overdue':
+                    $query->where('due_date', '<', $today)->whereNull('completed_at');
+                    break;
+                // 今日
+                case 'today':
+                    $query->whereDate('due_date', $today);
+                    break;
+                // 明日まで
+                case 'tomorrow':
+                    $query->whereDate('due_date', '<=', $tomorrow)->whereNotNull('due_date');
+                    break;
+                // 今週中
+                case 'this_week':
+                    $query->whereDate('due_date', '<=', $thisWeekEnd)->whereNotNull('due_date');
+                    break;
+                // 来週中
+                case 'next_week':
+                    $query->whereDate('due_date', '>', $thisWeekEnd)
+                        ->whereDate('due_date', '<=', $nextWeekEnd);
+                    break;
+            }
         }
 
         // SQLを実行し、条件に合うタスク一覧を取得して返す
@@ -66,8 +117,22 @@ class TaskController extends Controller
         $currentUser = Auth::user();
         // URLの ?filter=xxx を取得（未指定なら 'self'）
         $filter = $request->query('filter', 'self');
+
+        // 絞り込みパラメータを取得
+        $searchParams = [];
+
+        if ($request->query('assignee_id')) {
+            $searchParams['assignee_id'] = $request->query('assignee_id');
+        }
+        if ($request->query('priority_id')) {
+            $searchParams['priority_id'] = $request->query('priority_id');
+        }
+        if ($request->query('due')) {
+            $searchParams['due'] = $request->query('due');
+        }
+
         // 共通化したロジックでタスクを取得
-        $tasks = $this->getFilteredTasks($currentUser, $filter);
+        $tasks = $this->getFilteredTasks($currentUser, $filter, $searchParams);
 
         // 全ユーザーを取得
         $users = User::select('id', 'name')->get()->sortByDesc(fn($u) => $u->id === $currentUser->id)->values();
