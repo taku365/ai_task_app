@@ -53,8 +53,13 @@
                         <i class="fas fa-lock"></i>
                         <span>パスワード</span>
                     </label>
-                    <input type="password" id="password" name="password" class="auth-input" placeholder="8文字以上" required
-                        minlength="8">
+                    <div class="auth-input-wrapper">
+                        <input type="password" id="password" name="password" class="auth-input" placeholder="8文字以上" required
+                            minlength="8">
+                        <button type="button" class="password-toggle-btn" onclick="togglePassword('password')">
+                            <i id="password-toggle-icon" class="fas fa-eye"></i>
+                        </button>
+                    </div>
                     <p class="auth-field-hint">8文字以上で入力してください</p>
                 </div>
 
@@ -64,8 +69,13 @@
                         <i class="fas fa-lock"></i>
                         <span>パスワード（確認）</span>
                     </label>
-                    <input type="password" id="password_confirmation" name="password_confirmation" class="auth-input"
-                        placeholder="もう一度入力してください" required minlength="8">
+                    <div class="auth-input-wrapper">
+                        <input type="password" id="password_confirmation" name="password_confirmation" class="auth-input"
+                            placeholder="もう一度入力してください" required minlength="8">
+                        <button type="button" class="password-toggle-btn" onclick="togglePassword('password_confirmation')">
+                            <i id="password_confirmation-toggle-icon" class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- 登録ボタン -->
@@ -85,3 +95,7 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script src="{{ asset('js/auth.js') }}"></script>
+@endpush

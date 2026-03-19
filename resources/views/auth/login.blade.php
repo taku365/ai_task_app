@@ -42,7 +42,12 @@
                         <i class="fas fa-lock"></i>
                         <span>パスワード</span>
                     </label>
-                    <input type="password" id="password" name="password" class="auth-input" placeholder="8文字以上" required>
+                    <div class="auth-input-wrapper">
+                        <input type="password" id="password" name="password" class="auth-input" placeholder="8文字以上" required>
+                        <button type="button" class="password-toggle-btn" onclick="togglePassword('password')">
+                            <i id="password-toggle-icon" class="fas fa-eye"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <!-- ログイン状態を保持 -->
@@ -80,3 +85,7 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+<script src="{{ asset('js/auth.js') }}"></script>
+@endpush

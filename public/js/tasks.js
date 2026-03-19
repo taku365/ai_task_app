@@ -954,7 +954,6 @@ function openNewTaskModal() {
  * @param {Object} task - 表示するタスクオブジェクト
  */
 // ★★★ inline onclick を辞める必要がある
-// eslint-disable-next-line no-unused-vars
 function openTaskDetailModal(taskId) {
     // currentTaskListから取得したタスクで初期化
     const task = currentTaskList.find((t) => t.id === taskId);
@@ -1462,7 +1461,6 @@ async function executeDeleteTask() {
  * @param {Event} event - クリックイベント
  * @param {number} taskId - タスクID
  */
-// eslint-disable-next-line no-unused-vars
 function handleCheckboxClick(event, taskId) {
     event.stopPropagation();
 
@@ -1955,7 +1953,6 @@ function renderMemberList() {
  * @param {number} memberId - 選択するメンバーのID
  */
 // ★★★ inline onclick を辞める必要がある
-// eslint-disable-next-line no-unused-vars
 function selectMemberInMemberSelectModal(memberId) {
     if (selectedMember === memberId) {
         selectedMember = null;

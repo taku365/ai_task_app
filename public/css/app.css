@@ -1697,6 +1697,31 @@ body {
     margin-top: -4px;
 }
 
+.auth-input-wrapper {
+    position: relative;
+}
+
+.auth-input-wrapper .auth-input {
+    padding-right: 48px;
+}
+
+.password-toggle-btn {
+    position: absolute;
+    right: 14px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    color: #7f8c8d;
+    cursor: pointer;
+    font-size: 16px;
+    padding: 4px;
+}
+
+.password-toggle-btn:hover {
+    color: #e74c3c;
+}
+
 /* 説明文 */
 .auth-description {
     text-align: center;
