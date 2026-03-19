@@ -1130,12 +1130,11 @@ function setModalLocked(locked) {
 }
 
 /**
- * 新規タスクを作成（AI解析あり）
- * 1. ユーザー入力をAI解析
- * 2. 解析結果とユーザーの手動入力をマージ
- * 3. データベースに保存
+ * 新規タスクを作成
+ * - useAI=true: ユーザー入力をAI解析してからマージ・保存（音声入力等で使用予定）
+ * - useAI=false: ユーザーの手動入力をそのまま保存（通常フロー）
  */
-async function createNewTask() {
+async function createNewTask(useAI = false) {
     // handleSaveTask();
 
     // 入力チェック
@@ -1145,55 +1144,63 @@ async function createNewTask() {
         return;
     }
 
+    // 保存中はモーダル操作をロックし、ボタン表示を変更
     setModalLocked(true);
-    // ボタンを「解析中...」に変更
     const saveBtn = document.getElementById("saveTaskBtn");
-    saveBtn.textContent = "解析中...";
+    saveBtn.textContent = useAI ? "解析中..." : "保存中...";
 
     try {
-        // AI解析APIにリクエストを送信
-        const response = await fetch("/api/tasks/analyze", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": csrfToken,
-                Accept: "application/json",
-            },
-            body: JSON.stringify({
-                text_input: textInput,
-            }),
-        });
+        // currentTaskに手動入力をセット
+        currentTask.textInput = textInput;
+        currentTask.aiTask = textInput;
+        currentTask.date = "指定なし";
+        currentTask.assignee = "指定なし";
+        currentTask.priority = "指定なし";
 
-        // AI解析APIのレスポンス(JSON)を取得
-        // 例: { success: true, message: "...", data: {...} }
-        const result = await response.json();
+        if (useAI) {
+            // AI解析APIにリクエストを送信
+            const response = await fetch("/api/tasks/analyze", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": csrfToken,
+                    Accept: "application/json",
+                },
+                body: JSON.stringify({
+                    text_input: textInput,
+                }),
+            });
 
-        if (!result.success) {
-            alert("エラー: " + (result.message || "AI解析に失敗しました"));
-            return;
+            // AI解析APIのレスポンス(JSON)を取得
+            // 例: { success: true, message: "...", data: {...} }
+            const result = await response.json();
+
+            if (!result.success) {
+                alert("エラー: " + (result.message || "AI解析に失敗しました"));
+                return;
+            }
+
+            // APIレスポンスの data 部分だけを取り出す(dataにAIが解析したタスク情報が入っている)
+            // 例: { aiTask: "...", date: "...", assignee: "...", priority: "..." }
+            const parsedTask = result.data;
+
+            // AI解析結果をcurrentTaskに反映
+            currentTask.textInput = textInput;
+            currentTask.aiTask = parsedTask.aiTask || textInput;
+            currentTask.date = parsedTask.date || "指定なし";
+            currentTask.assignee = parsedTask.assignee || "指定なし";
+            currentTask.priority = parsedTask.priority || "指定なし";
         }
 
-        // APIレスポンスの data 部分だけを取り出す(dataにAIが解析したタスク情報が入っている)
-        // 例: { aiTask: "...", date: "...", assignee: "...", priority: "..." }
-        const parsedTask = result.data;
-
-        // AI解析結果をcurrentTaskに反映
-        currentTask.textInput = textInput;
-        currentTask.aiTask = parsedTask.aiTask || textInput;
-        currentTask.date = parsedTask.date || "指定なし";
-        currentTask.assignee = parsedTask.assignee || "指定なし";
-        currentTask.priority = parsedTask.priority || "指定なし";
-
-        // ユーザーの手動入力で上書き(日付、担当者、優先度)
+        // 画面（DOM）の値で currentTask を上書き
+        // 日付・担当者・優先度はユーザーが画面で選んだ値が正
+        // ※ 画面と currentTask は別管理のため保存直前に同期が必要
         const detailDateElement = document.getElementById("detailDate");
         const manualDate =
             detailDateElement.dataset.date || detailDateElement.textContent;
         const manualTime = detailDateElement.dataset.time || null;
 
-        if (manualDate && manualDate !== "指定なし") {
-            currentTask.date = manualDate;
-        }
-
+        currentTask.date = manualDate || "指定なし";
         // 日付なしの場合は時間も無効にする
         currentTask.time =
             currentTask.date && currentTask.date !== "指定なし"
@@ -1202,15 +1209,11 @@ async function createNewTask() {
 
         const manualAssignee =
             document.getElementById("detailAssignee").textContent;
-        if (manualAssignee) {
-            currentTask.assignee = manualAssignee;
-        }
+        currentTask.assignee = manualAssignee || "指定なし";
 
         const manualPriority = document.querySelector(".priority-btn.active")
             ?.dataset.priority;
-        if (manualPriority) {
-            currentTask.priority = manualPriority;
-        }
+        currentTask.priority = manualPriority || "指定なし";
 
         // 新規作成APIにリクエストを送信
         const saveResponse = await fetch("/api/tasks", {
@@ -1232,17 +1235,14 @@ async function createNewTask() {
 
         // 新規作成APIのレスポンス(JSON)を取得
         const saveResult = await saveResponse.json();
-
         // エラー
         if (!saveResult.success) {
             alert("作成に失敗しました: " + (saveResult.message || ""));
             return;
         }
 
-        // 成功時はモーダルを閉じる
+        // 成功時はモーダルを閉じて、タスク一覧を更新
         closeModal("taskDetailModal");
-
-        // タスク一覧を更新 ※currentTaskListを更新
         await filterTasks(currentFilter);
     } catch (error) {
         alert("エラー: " + error.message);
