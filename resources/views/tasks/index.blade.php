@@ -167,9 +167,13 @@
                 </button>
             </div>
             <div class="task-detail-content">
-                <div class="task-detail-title">
-                    <div class="task-checkbox" id="detailCheckbox"></div>
-                    <input type="text" id="textInputField" value="" placeholder="タスクを入力してください" />
+                <div class="detail-field task-detail-title" id="taskTitleField">
+                    <div class="detail-field-label">
+                        <i class="fas fa-clipboard"></i>
+                        <span>タスク</span>
+                    </div>
+                    <input type="text" id="textInputField" class="detail-field-input" value="" placeholder="タスクを入力してください" />
+                    <div id="detailCheckbox" style="display:none;"></div>
                 </div>
 
                 <div class="detail-field" id="dateField">
