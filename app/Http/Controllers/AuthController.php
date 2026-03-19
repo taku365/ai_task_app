@@ -75,12 +75,25 @@ class AuthController extends Controller
     // 新規登録処理を行うメソッド
     public function register(Request $request)
     {
-        // バリデーションチェック（入力チェック）
-        $validated = $request->validate([
+        // バリデーションチェック
+        $rules = [
             'name' => ['required', 'string', 'max:50'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:ai_tasks_M_users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
-        ]);
+        ];
+
+        $message = [
+            'name.required' => 'ユーザー名を入力してください。',
+            'name.max' => 'ユーザー名は50文字以内で入力してください。',
+            'email.required' => 'メールアドレスを入力してください。',
+            'email.email' => '有効なメールアドレスを入力してください。',
+            'email.unique' => 'このメールアドレスは既に登録されています。',
+            'password.required' => 'パスワードを入力してください。',
+            'password.min' => 'パスワードは8文字以上で入力してください。',
+            'password.confirmed' => 'パスワードが一致しません。',
+        ];
+
+        $validated = $request->validate($rules, $message);
 
         // ユーザーを作成
         $user = User::create([
