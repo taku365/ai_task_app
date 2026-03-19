@@ -1611,7 +1611,12 @@ async function executeCompleteTaskWithAnimation(taskId) {
 
         currentTask = transformTaskData(result.task);
 
-        if (currentFilter !== "completed") {
+        if (currentFilter === "all") {
+            // "all" フィルタの場合はリストを更新（完了済み状態に差し替え）
+            currentTaskList = currentTaskList.map((t) =>
+                t.id === taskId ? currentTask : t,
+            );
+        } else if (currentFilter !== "completed") {
             currentTaskList = currentTaskList.filter((t) => t.id !== taskId);
         }
 
@@ -1661,9 +1666,14 @@ async function executeCompleteTask() {
         // ローカルのcurrentTaskを更新(APIレスポンスを使用する)
         currentTask = transformTaskData(result.task);
 
-        // "self" | "member" | "unassigned" の場合
-        // currentTaskListから完了したタスクを除外
-        if (currentFilter !== "completed") {
+        if (currentFilter === "all") {
+            // "all" フィルタの場合はリストを更新（完了済み状態に差し替え）
+            currentTaskList = currentTaskList.map((t) =>
+                t.id === completedTaskId ? currentTask : t,
+            );
+        } else if (currentFilter !== "completed") {
+            // "self" | "member" | "unassigned" の場合
+            // currentTaskListから完了したタスクを除外
             currentTaskList = currentTaskList.filter(
                 (t) => t.id !== completedTaskId,
             );
