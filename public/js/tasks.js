@@ -1397,7 +1397,19 @@ function deleteTask() {
         return;
     }
 
-    // 自分・未割当・完了タスクの場合は削除確認モーダルを表示
+    // 担当者なしのタスクの場合は確認アラートを表示
+    if (currentTask.assignee === "指定なし") {
+        showAlert(
+            "担当者なしのタスクです",
+            "このタスクは担当者が指定されていません。削除してもよろしいですか?",
+            "削除する",
+            () => executeDeleteTask(),
+            "fas fa-trash",
+        );
+        return;
+    }
+
+    // 自分・完了タスクの場合は削除確認モーダルを表示
     showDeleteConfirm(() => executeDeleteTask());
 }
 
