@@ -331,7 +331,7 @@ function formatTaskDateInGroup(task, groupType) {
         }
     }
 
-    if (!task.dueDate) return "指定なし";
+    if (!task.dueDate) return "期限なし";
 
     const taskDate = new Date(task.dueDate);
     const today = new Date();
@@ -1819,7 +1819,8 @@ function renderTaskItem(task, isCompleted = false, groupType = null) {
         dateTimeDisplay = formatTaskDateInGroup(task, groupType);
     } else {
         // 従来通りの表示（unassigned, completed用）
-        dateTimeDisplay = task.time ? `${task.date} ${task.time}` : task.date;
+        const dateLabel = task.date === "指定なし" ? "期限なし" : task.date;
+        dateTimeDisplay = task.time ? `${dateLabel} ${task.time}` : dateLabel;
     }
 
     // 期限切れ判定（完了済みは除く）
