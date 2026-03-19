@@ -277,24 +277,26 @@ function formatDateHeader(date, type) {
  */
 function sortTasksWithinGroup(tasks, oldestFirst = false) {
     return tasks.sort((a, b) => {
-        const aHasTime = !!a.time;
-        const bHasTime = !!b.time;
-
-        // 時間ありを優先
-        if (aHasTime && !bHasTime) return -1;
-        if (!aHasTime && bHasTime) return 1;
-
-        // 両方時間ありの場合は時間順
-        if (aHasTime && bHasTime) {
-            return a.time.localeCompare(b.time);
-        }
-
-        // 期限切れグループの場合は日付順（古い順）
         if (oldestFirst && a.dueDate && b.dueDate) {
-            return new Date(a.dueDate) - new Date(b.dueDate);
-        }
+            const aDate = new Date(a.dueDate);
+            aDate.setHours(0, 0, 0, 0);
+            const bDate = new Date(b.dueDate);
+            bDate.setHours(0, 0, 0, 0);
 
-        return 0;
+            // ① 日付が違う → 古い順
+            if (aDate.getTime() !== bDate.getTime()) {
+                return aDate - bDate;
+            }
+            // ② 同じ日付内 → 時間ありを先に、時間順（古い順）
+            const aHasTime = !!a.time;
+            const bHasTime = !!b.time;
+            if (aHasTime && !bHasTime) return -1;
+            if (!aHasTime && bHasTime) return 1;
+            if (aHasTime && bHasTime) {
+                return a.time.localeCompare(b.time);
+            }
+            return 0;
+        }
     });
 }
 
@@ -319,7 +321,7 @@ function formatTaskDateInGroup(task, groupType) {
 
         // 期限未設定グループ: 担当者と優先度を表示（日付表示は不要）
         if (groupType === "noDate") {
-            return ""; // 日付欄は非表示
+            return "期限なし";
         }
 
         // 優先度未設定グループ: 日付と時間を表示
@@ -355,8 +357,9 @@ function formatTaskDateInGroup(task, groupType) {
             : `${month}月${day}日`;
     }
 
-    // その他のグループは時間のみ表示（時間がある場合）
-    return task.time || "";
+    const month = taskDate.getMonth() + 1;
+    const day = taskDate.getDate();
+    return task.time ? `${month}月${day}日 ${task.time}` : `${month}月${day}日`;
 }
 
 /**
