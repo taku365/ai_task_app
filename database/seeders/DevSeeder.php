@@ -4,90 +4,140 @@ namespace Database\Seeders;
 
 use App\Models\User;
 use App\Models\Task;
+use App\Models\Priority;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
 
 class DevSeeder extends Seeder
 {
     public function run(): void
     {
-        // 開発用固定ユーザー（実際のメンバー）
-        $matsuda = User::factory()->create([
-            'name' => '松田',
-            'email' => 'matsuda@example.com',
+        // 固定ユーザー3人
+        $user1 = User::factory()->create([
+            'name'     => 'テスト1',
+            'email'    => 'test1@test.com',
+            'password' => Hash::make('password'),
         ]);
-        
-        $nonaka = User::factory()->create([
-            'name' => '野中',
-            'email' => 'nonaka@example.com',
+        $user2 = User::factory()->create([
+            'name'     => 'テスト2',
+            'email'    => 'test2@test.com',
+            'password' => Hash::make('password'),
         ]);
-        
-        $shiraishi = User::factory()->create([
-            'name' => '白石',
-            'email' => 'shiraishi@example.com',
+        $user3 = User::factory()->create([
+            'name'     => 'テスト3',
+            'email'    => 'test3@test.com',
+            'password' => Hash::make('password'),
         ]);
-        
-        $matsunami = User::factory()->create([
-            'name' => '松波',
-            'email' => 'matsunami@example.com',
-        ]);
-        
-        $miyahara = User::factory()->create([
-            'name' => '宮原',
-            'email' => 'miyahara@example.com',
-        ]);
-        
-        $yasuoka = User::factory()->create([
-            'name' => '安岡',
-            'email' => 'yasuoka@example.com',
-        ]);
-        
-        $sakamoto = User::factory()->create([
-            'name' => '阪本',
-            'email' => 'sakamoto@example.com',
-        ]);
-        
-        $matsumoto = User::factory()->create([
-            'name' => '松本',
-            'email' => 'matsumoto@example.com',
-        ]);
-        
-        $allUsers = collect([$matsuda, $nonaka, $shiraishi, $matsunami, $miyahara, $yasuoka, $sakamoto, $matsumoto]);
-        
-        // テストケース1: 松田担当のタスク（自分用タスクのテスト）
-        Task::factory(10)->create([
-            'assignee_id' => $matsuda->id,
-            'created_by_id' => $allUsers->random()->id,
-        ]);
-        
-        // テストケース2: 他メンバー担当のタスク
-        foreach ([$nonaka, $shiraishi, $matsunami, $miyahara] as $member) {
-            Task::factory(3)->create([
-                'assignee_id' => $member->id,
-                'created_by_id' => $allUsers->random()->id,
+
+        $users = collect([$user1, $user2, $user3]);
+
+        $highPriority   = Priority::where('code', 'high')->first()?->id;
+        $mediumPriority = Priority::where('code', 'medium')->first()?->id;
+        $lowPriority    = Priority::where('code', 'low')->first()?->id;
+
+        $today    = now()->toDateString();
+        $tomorrow = now()->addDay()->toDateString();
+        $dayAfter = now()->addDays(2)->toDateString();
+        $overdue  = now()->subDays(3)->toDateString();
+
+        // 期限切れ × 2件
+        foreach (range(1, 2) as $i) {
+            Task::create([
+                'text_input'    => "期限切れタスク {$i}",
+                'ai_task'       => "期限切れタスク {$i}",
+                'due_date'      => $overdue,
+                'assignee_id'   => $users->random()->id,
+                'priority_id'   => $mediumPriority,
+                'created_by_id' => $users->random()->id,
             ]);
         }
-        
-        // テストケース3: 未割当タスク（担当者なし）
-        Task::factory(8)->unassigned()->create([
-            'created_by_id' => $allUsers->random()->id,
-        ]);
-        
-        // テストケース4: 完了済みタスク
-        Task::factory(12)->completed()->create([
-            'assignee_id' => $allUsers->random()->id,
-            'created_by_id' => $allUsers->random()->id,
-        ]);
-        
-        // テストケース5: 高優先度タスク
-        Task::factory(5)->highPriority()->create([
-            'assignee_id' => $allUsers->random()->id,
-            'created_by_id' => $allUsers->random()->id,
-        ]);
-        
-        // テストケース6: 期限切れタスク
-        Task::factory(4)->overdue()->create([
-            'assignee_id' => $allUsers->random()->id,
-            'created_by_id' => $allUsers->random()->id,
-        ]);
+
+        // 今日 × 2件
+        foreach (range(1, 2) as $i) {
+            Task::create([
+                'text_input'    => "今日のタスク {$i}",
+                'ai_task'       => "今日のタスク {$i}",
+                'due_date'      => $today,
+                'assignee_id'   => $users->random()->id,
+                'priority_id'   => $highPriority,
+                'created_by_id' => $users->random()->id,
+            ]);
+        }
+
+        // 明日 × 2件
+        foreach (range(1, 2) as $i) {
+            Task::create([
+                'text_input'    => "明日のタスク {$i}",
+                'ai_task'       => "明日のタスク {$i}",
+                'due_date'      => $tomorrow,
+                'assignee_id'   => $users->random()->id,
+                'priority_id'   => $lowPriority,
+                'created_by_id' => $users->random()->id,
+            ]);
+        }
+
+        // 明後日 × 2件
+        foreach (range(1, 2) as $i) {
+            Task::create([
+                'text_input'    => "明後日のタスク {$i}",
+                'ai_task'       => "明後日のタスク {$i}",
+                'due_date'      => $dayAfter,
+                'assignee_id'   => $users->random()->id,
+                'priority_id'   => $mediumPriority,
+                'created_by_id' => $users->random()->id,
+            ]);
+        }
+
+        // 期限なし × 2件
+        foreach (range(1, 2) as $i) {
+            Task::create([
+                'text_input'    => "期限なしタスク {$i}",
+                'ai_task'       => "期限なしタスク {$i}",
+                'due_date'      => null,
+                'assignee_id'   => $users->random()->id,
+                'priority_id'   => $lowPriority,
+                'created_by_id' => $users->random()->id,
+            ]);
+        }
+
+        // 優先度なし × 2件
+        foreach (range(1, 2) as $i) {
+            Task::create([
+                'text_input'    => "優先度なしタスク {$i}",
+                'ai_task'       => "優先度なしタスク {$i}",
+                'due_date'      => $tomorrow,
+                'assignee_id'   => $users->random()->id,
+                'priority_id'   => null,
+                'created_by_id' => $users->random()->id,
+            ]);
+        }
+
+        // 担当者なし × 2件
+        foreach (range(1, 2) as $i) {
+            Task::create([
+                'text_input'    => "担当者なしタスク {$i}",
+                'ai_task'       => "担当者なしタスク {$i}",
+                'due_date'      => $today,
+                'assignee_id'   => null,
+                'priority_id'   => $mediumPriority,
+                'created_by_id' => $users->random()->id,
+            ]);
+        }
+
+        // 完了済み × 5件
+        foreach (range(1, 5) as $i) {
+            $assignee = $users->random();
+            Task::create([
+                'text_input'      => "完了済みタスク {$i}",
+                'ai_task'         => "完了済みタスク {$i}",
+                'due_date'        => now()->subDays(rand(1, 10))->toDateString(),
+                'assignee_id'     => $assignee->id,
+                'priority_id'     => $mediumPriority,
+                'created_by_id'   => $users->random()->id,
+                'completed_flg'   => true,
+                'completed_at'    => now()->subDays(rand(0, 5)),
+                'completed_by_id' => $assignee->id,
+            ]);
+        }
     }
 }
