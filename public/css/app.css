@@ -13,9 +13,6 @@ body {
     color: #2c3e50;
     max-width: 480px;
     margin: 0 auto;
-    height: 100vh;
-    display: flex;
-    flex-direction: column;
 }
 
 /* ヘッダー */
@@ -23,6 +20,7 @@ body {
     background-color: #fff;
     padding: 16px 20px 0;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
 }
 
 .header h1 {
@@ -232,6 +230,7 @@ body {
     display: flex;
     justify-content: space-around;
     box-shadow: 0 -2px 4px rgba(0, 0, 0, 0.05);
+    flex-shrink: 0;
 }
 
 .nav-item {
@@ -1432,7 +1431,7 @@ body {
 .screen {
     display: flex;
     flex-direction: column;
-    height: 100vh;
+    height: 100dvh;
 }
 
 .screen.hidden {
