@@ -896,7 +896,7 @@ async function handleSaveTask() {
     if (currentTask.id) {
         await editTask();
     } else {
-        await createNewTask();
+        await textCreateTask();
     }
 }
 
@@ -1134,7 +1134,7 @@ function setModalLocked(locked) {
 /**
  * 新規タスクを作成（手入力）
  */
-async function createNewTask() {
+async function textCreateTask() {
     // handleSaveTask();
 
     // 入力チェック
