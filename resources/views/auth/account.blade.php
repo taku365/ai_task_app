@@ -74,8 +74,13 @@
                             <i class="fas fa-lock"></i>
                             <span>現在のパスワード</span>
                         </label>
-                        <input type="password" id="current_password" name="current_password" 
-                               class="auth-input" placeholder="現在のパスワード">
+                        <div class="auth-input-wrapper">
+                            <input type="password" id="current_password" name="current_password"
+                                   class="auth-input" placeholder="現在のパスワード">
+                            <button type="button" class="password-toggle-btn" onclick="togglePassword('current_password')">
+                                <i id="current_password-toggle-icon" class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- 新しいパスワード -->
@@ -84,8 +89,13 @@
                             <i class="fas fa-lock"></i>
                             <span>新しいパスワード</span>
                         </label>
-                        <input type="password" id="password" name="password" 
-                               class="auth-input" placeholder="8文字以上" minlength="8">
+                        <div class="auth-input-wrapper">
+                            <input type="password" id="password" name="password"
+                                   class="auth-input" placeholder="8文字以上" minlength="8">
+                            <button type="button" class="password-toggle-btn" onclick="togglePassword('password')">
+                                <i id="password-toggle-icon" class="fas fa-eye"></i>
+                            </button>
+                        </div>
                         <p class="auth-field-hint">8文字以上で入力してください</p>
                     </div>
 
@@ -95,8 +105,13 @@
                             <i class="fas fa-lock"></i>
                             <span>新しいパスワード（確認）</span>
                         </label>
-                        <input type="password" id="password_confirmation" name="password_confirmation" 
-                               class="auth-input" placeholder="もう一度入力してください" minlength="8">
+                        <div class="auth-input-wrapper">
+                            <input type="password" id="password_confirmation" name="password_confirmation"
+                                   class="auth-input" placeholder="もう一度入力してください" minlength="8">
+                            <button type="button" class="password-toggle-btn" onclick="togglePassword('password_confirmation')">
+                                <i id="password_confirmation-toggle-icon" class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -109,3 +124,7 @@
         </div>
     </div>
 @endsection
+
+@push('scripts')
+    <script src="{{ asset('js/auth.js') }}"></script>
+@endpush
