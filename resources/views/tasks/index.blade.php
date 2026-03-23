@@ -131,6 +131,9 @@
             </button>
         </div>
 
+        <!-- 解析中オーバーレイ -->
+        <div class="analyzing-overlay" id="analyzingOverlay"></div>
+
         <!-- 録音中バー -->
         <div class="recording-bar" id="recordingBar">
             <i class="fas fa-microphone recording-bar-icon" id="recordingBarIcon"></i>

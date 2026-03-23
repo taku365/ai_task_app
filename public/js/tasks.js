@@ -1206,12 +1206,12 @@ async function createNewTask() {
 async function voiceCreateTask(transcript) {
     const recordingBar = document.getElementById("recordingBar");
     const recordingBarLabel = document.getElementById("recordingBarLabel");
-    const bottomNav = document.querySelector(".bottom-nav");
+    const analyzingOverlay = document.getElementById("analyzingOverlay");
 
     // 解析中UIに切り替え
     recordingBar.classList.add("active", "analyzing");
     recordingBarLabel.textContent = "解析中...";
-    bottomNav.style.pointerEvents = "none";
+    if (analyzingOverlay) analyzingOverlay.classList.add("active");
 
     try {
         // AI解析APIにリクエストを送信
@@ -1274,7 +1274,7 @@ async function voiceCreateTask(transcript) {
         // UIを元に戻す
         recordingBar.classList.remove("active", "analyzing");
         recordingBarLabel.textContent = "";
-        bottomNav.style.pointerEvents = "";
+        if (analyzingOverlay) analyzingOverlay.classList.remove("active");
         const voiceBtn = document.getElementById("voiceInputBtn");
         if (voiceBtn) voiceBtn.disabled = false;
     }

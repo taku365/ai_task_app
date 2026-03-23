@@ -295,6 +295,20 @@ body {
     color: #f39c12;
 }
 
+/* 解析中オーバーレイ（全操作をブロック） */
+.analyzing-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 150;
+    background: rgba(0, 0, 0, 0.15);
+    cursor: not-allowed;
+}
+
+.analyzing-overlay.active {
+    display: block;
+}
+
 /* 右下フローティングボタン群 */
 .floating-btns {
     position: fixed;
