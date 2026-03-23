@@ -1291,7 +1291,7 @@ body {
 .settings-screen {
     display: none;
     flex-direction: column;
-    height: 100vh;
+    height: 100dvh;
     background-color: #f5f5f5;
 }
 
@@ -1317,6 +1317,7 @@ body {
 .settings-content {
     flex: 1;
     padding: 20px;
+    overflow: hidden;
 }
 
 .settings-section {
