@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>音声入力機能 調査・実装報告</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Sans", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+            background-color: #f5f5f5;
+            color: #2c3e50;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        /* ヘッダー */
+        .report-header {
+            background: #fff;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 4px solid #e74c3c;
+        }
+
+        .report-header .date {
+            font-size: 13px;
+            color: #95a5a6;
+            margin-bottom: 8px;
+        }
+
+        .report-header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+        }
+
+        .report-header .subtitle {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        /* セクション */
+        .section {
+            background: #fff;
+            border-radius: 12px;
+            padding: 28px 32px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section-title i {
+            color: #e74c3c;
+            font-size: 15px;
+        }
+
+        .section-lead {
+            font-size: 13px;
+            color: #7f8c8d;
+            margin-bottom: 20px;
+            line-height: 1.6;
+        }
+
+        /* テーブル */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            background: #f8f9fa;
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #555;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        td {
+            padding: 12px 14px;
+            border-bottom: 1px solid #f0f0f0;
+            vertical-align: top;
+            line-height: 1.7;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        .badge {
+            display: inline-block;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-green  { background: #e8f8f0; color: #27ae60; }
+        .badge-yellow { background: #fef9e7; color: #f39c12; }
+        .badge-red    { background: #fdf0f0; color: #e74c3c; }
+
+        /* ハイライトボックス */
+        .highlight-box {
+            background: #fff5f5;
+            border: 1px solid #f5c6c6;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-top: 16px;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #555;
+        }
+
+        .highlight-box strong { color: #e74c3c; }
+
+        /* たとえば〜ボックス */
+        .example-box {
+            background: #f0f7ff;
+            border: 1px solid #b3d4f5;
+            border-radius: 8px;
+            padding: 16px 20px;
+            margin-top: 16px;
+            font-size: 14px;
+            line-height: 1.8;
+            color: #2c5f8a;
+        }
+
+        .example-box .ex-label {
+            font-weight: 700;
+            font-size: 12px;
+            letter-spacing: 0.05em;
+            color: #3498db;
+            margin-bottom: 6px;
+        }
+
+        /* 機能カード */
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 14px;
+            margin-top: 4px;
+        }
+
+        .card {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 16px 18px;
+        }
+
+        .card .card-icon {
+            font-size: 22px;
+            margin-bottom: 8px;
+        }
+
+        .card .card-title {
+            font-size: 14px;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+
+        .card .card-desc {
+            font-size: 13px;
+            color: #7f8c8d;
+            line-height: 1.6;
+        }
+
+        /* フロー */
+        .flow {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .flow-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+        }
+
+        .flow-line {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .flow-dot {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #e74c3c;
+            color: #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 13px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .flow-connector {
+            width: 2px;
+            height: 28px;
+            background: #e9ecef;
+            margin: 2px 0;
+        }
+
+        .flow-content {
+            padding: 4px 0 24px;
+        }
+
+        .flow-content .flow-label {
+            font-weight: 600;
+            font-size: 14px;
+            color: #2c3e50;
+            margin-bottom: 4px;
+        }
+
+        .flow-content .flow-desc {
+            font-size: 13px;
+            color: #7f8c8d;
+            line-height: 1.7;
+        }
+
+        /* 課題リスト */
+        .todo-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .todo-list li {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            font-size: 14px;
+            line-height: 1.7;
+        }
+
+        .todo-list li i {
+            color: #e74c3c;
+            margin-top: 3px;
+            flex-shrink: 0;
+        }
+
+        .todo-list .todo-title {
+            font-weight: 700;
+            color: #2c3e50;
+            display: block;
+            margin-bottom: 2px;
+        }
+
+        .todo-list .todo-desc {
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ヘッダー -->
+    <div class="report-header">
+        <div class="date">2026年3月23日</div>
+        <h1>音声入力機能 調査・実装報告</h1>
+        <div class="subtitle">タスク管理アプリ（AI-task-app）/ feature/voice-input ブランチ</div>
+    </div>
+
+    <!-- 0. 実装方法の比較 -->
+    <div class="section">
+        <div class="section-title">
+            <i class="fas fa-search"></i>
+            どの方法で作るか調べた
+        </div>
+        <div class="section-lead">音声入力を実現する方法はいくつかあります。それぞれのメリット・デメリットを比べました。</div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>方法</th>
+                    <th>お金</th>
+                    <th>精度</th>
+                    <th>ブラウザ</th>
+                    <th>サーバー工事</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Web Speech API</strong></td>
+                    <td><span class="badge badge-green">無料</span></td>
+                    <td><span class="badge badge-yellow">ふつう</span></td>
+                    <td><span class="badge badge-yellow">Chrome・Edge のみ</span></td>
+                    <td>不要</td>
+                </tr>
+                <tr>
+                    <td><strong>OpenAI Whisper API</strong></td>
+                    <td><span class="badge badge-yellow">従量課金</span></td>
+                    <td><span class="badge badge-green">高い</span></td>
+                    <td><span class="badge badge-green">全ブラウザ</span></td>
+                    <td>必要</td>
+                </tr>
+                <tr>
+                    <td><strong>Google STT</strong></td>
+                    <td><span class="badge badge-yellow">従量課金</span></td>
+                    <td><span class="badge badge-green">高い</span></td>
+                    <td><span class="badge badge-green">全ブラウザ</span></td>
+                    <td>必要</td>
+                </tr>
+                <tr>
+                    <td><strong>Azure Speech</strong></td>
+                    <td><span class="badge badge-yellow">従量課金</span></td>
+                    <td><span class="badge badge-green">高い</span></td>
+                    <td><span class="badge badge-green">全ブラウザ</span></td>
+                    <td>必要</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="highlight-box">
+            <strong>今回は Web Speech API を選びました。</strong><br>
+            理由は「お金がかからない・サーバーの改修が不要・すでにある AI 解析とそのままつながる」の3つです。
+            まずは低コストで試してみて、精度やブラウザ対応に問題が出てきたら Whisper API への切り替えを検討します。
+        </div>
+    </div>
+
+    <!-- 1. Web Speech API とは -->
+    <div class="section">
+        <div class="section-title">
+            <i class="fas fa-microphone-alt"></i>
+            そもそも「Web Speech API」って何？
+        </div>
+        <div class="section-lead">むずかしい言葉が出てきますが、シンプルに言うとこういうものです。</div>
+
+        <div class="card-grid">
+            <div class="card">
+                <div class="card-icon">🎙️</div>
+                <div class="card-title">声をテキストに変えてくれる</div>
+                <div class="card-desc">マイクに向かって話すだけで、文字に変換してくれます。スマホの音声入力と同じしくみです。</div>
+            </div>
+            <div class="card">
+                <div class="card-icon">🌐</div>
+                <div class="card-title">ブラウザだけで動く</div>
+                <div class="card-desc">アプリをインストールしなくても、Chrome などのブラウザがそのまま対応しています。</div>
+            </div>
+            <div class="card">
+                <div class="card-icon">💰</div>
+                <div class="card-title">無料で使える</div>
+                <div class="card-desc">外部サービスへの課金なしで利用できます。何万回使っても費用はかかりません。</div>
+            </div>
+            <div class="card">
+                <div class="card-icon">☁️</div>
+                <div class="card-title">声はGoogleに送られる</div>
+                <div class="card-desc">Chrome の場合、音声データは Google のサーバーで処理されてテキストが返ってきます。</div>
+            </div>
+        </div>
+
+        <div class="example-box" style="margin-top:16px;">
+            <div class="ex-label">💡 たとえるなら</div>
+            「Siri に話しかけたら文字にしてくれる」のと同じことを、アプリの中でできるようにしたものです。
+        </div>
+
+        <div class="highlight-box">
+            <strong>今回のアプリでの使い方：</strong>マイクボタンを押して話し、停止ボタンを押すまでずっと録音し続けます。止めたタイミングで、まとめてテキストを AI に渡して解析します。
+        </div>
+    </div>
+
+    <!-- 2. 処理フロー -->
+    <div class="section">
+        <div class="section-title">
+            <i class="fas fa-arrow-right"></i>
+            使ったときに何が起きているか
+        </div>
+        <div class="section-lead">ボタンを押してからタスクが登録されるまでの流れです。</div>
+
+        <div class="flow">
+            <div class="flow-item">
+                <div class="flow-line">
+                    <div class="flow-dot">1</div>
+                    <div class="flow-connector"></div>
+                </div>
+                <div class="flow-content">
+                    <div class="flow-label">🎙️ マイクボタンをタップする</div>
+                    <div class="flow-desc">画面右下のフローティングマイクボタンをタップします。画面上部に「録音バー」が現れて、録音が始まります。</div>
+                </div>
+            </div>
+            <div class="flow-item">
+                <div class="flow-line">
+                    <div class="flow-dot">2</div>
+                    <div class="flow-connector"></div>
+                </div>
+                <div class="flow-content">
+                    <div class="flow-label">🗣️ 話す（Web Speech API が文字に変換）</div>
+                    <div class="flow-desc">「明日の午後3時までに田中さんに資料を送る」など、タスクの内容を話します。話した内容はリアルタイムで文字にどんどん変換・蓄積されています。</div>
+                </div>
+            </div>
+            <div class="flow-item">
+                <div class="flow-line">
+                    <div class="flow-dot">3</div>
+                    <div class="flow-connector"></div>
+                </div>
+                <div class="flow-content">
+                    <div class="flow-label">⏹️ 停止ボタンをタップする</div>
+                    <div class="flow-desc">録音バーが「解析中...」の表示に切り替わります。誤って別の操作をしないようにボトムナビも一時的に無効になります。</div>
+                </div>
+            </div>
+            <div class="flow-item">
+                <div class="flow-line">
+                    <div class="flow-dot">4</div>
+                    <div class="flow-connector"></div>
+                </div>
+                <div class="flow-content">
+                    <div class="flow-label">🤖 AI が内容を読み解く</div>
+                    <div class="flow-desc">文字起こしされたテキストを AI に渡します。AI が「タスク名・期限・担当者・優先度・かかる時間」を自動で読み取ります。</div>
+                </div>
+            </div>
+            <div class="flow-item">
+                <div class="flow-line">
+                    <div class="flow-dot">5</div>
+                </div>
+                <div class="flow-content">
+                    <div class="flow-label">✅ タスクが自動で登録される</div>
+                    <div class="flow-desc">AI の解析結果をそのまま DB に保存。ボタン操作なしでタスク一覧にすぐ反映されます。録音バーも自動で消えます。</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="example-box">
+            <div class="ex-label">💡 たとえるなら</div>
+            「Siri、明日の会議をリマインドして」と話しかけると登録されるのと同じ感覚で、タスクが登録できるイメージです。
+        </div>
+    </div>
+
+    <!-- 3. 実装内容 -->
+    <div class="section">
+        <div class="section-title">
+            <i class="fas fa-code"></i>
+            どのファイルを変えたか
+        </div>
+        <div class="section-lead">実際にコードを書き変えたファイルと、その内容です。</div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>ファイル</th>
+                    <th>何を変えたか</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>tasks.js</strong></td>
+                    <td>
+                        ・音声入力専用の登録関数 <code>voiceCreateTask()</code> を新しく追加<br>
+                        ・既存の <code>createNewTask()</code> から AI 解析の処理を切り出して整理<br>
+                        ・<code>initVoiceInput()</code> で録音バーの表示・非表示を制御
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>index.blade.php</strong></td>
+                    <td>
+                        ・右下にフローティングマイクボタンを追加<br>
+                        ・録音中バー（波形アニメーション・停止ボタン）を追加
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>app.css</strong></td>
+                    <td>
+                        ・録音バーのデザイン（録音中・解析中の2パターン）を追加<br>
+                        ・フローティングボタンのデザインを追加
+                    </td>
+                </tr>
+                <tr>
+                    <td><strong>TaskController.php</strong></td>
+                    <td>
+                        ・AI に渡すプロンプトに「時間」の抽出ルールを追加<br>
+                        ・「今日」「明日」「今週中」などの表現を実際の日付に変換してから渡すよう修正
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- 4. 今後の課題 -->
+    <div class="section">
+        <div class="section-title">
+            <i class="fas fa-list-check"></i>
+            これからの課題
+        </div>
+        <div class="section-lead">使えるようにはなりましたが、まだ気になっている点があります。</div>
+
+        <ul class="todo-list">
+            <li>
+                <i class="fas fa-circle-dot"></i>
+                <div>
+                    <span class="todo-title">Safari・Firefox では使えない</span>
+                    <span class="todo-desc">Web Speech API は Chrome と Edge にしか対応していません。Safari や Firefox のユーザーが増えてきたら、Whisper API（全ブラウザ対応）への切り替えを検討します。</span>
+                </div>
+            </li>
+            <li>
+                <i class="fas fa-circle-dot"></i>
+                <div>
+                    <span class="todo-title">聞き間違えたときの対処</span>
+                    <span class="todo-desc">音声認識が間違えると、そのままタスクに登録されてしまいます。「〇〇として登録しました」というお知らせを出して、すぐ編集できるよう誘導する仕組みを検討しています。</span>
+                </div>
+            </li>
+            <li>
+                <i class="fas fa-circle-dot"></i>
+                <div>
+                    <span class="todo-title">いろんな話し方での精度確認</span>
+                    <span class="todo-desc">専門用語が多い内容・早口・周囲がうるさい環境など、さまざまなケースで正しく認識できるか確認が必要です。</span>
+                </div>
+            </li>
+            <li>
+                <i class="fas fa-circle-dot"></i>
+                <div>
+                    <span class="todo-title">アプリを開かずに登録できるようにしたい</span>
+                    <span class="todo-desc">将来的には、ブラウザ拡張やブックマークレットとして音声ボタンを独立させ、アプリを開かなくても「話すだけでタスクを登録」できる体験を目指しています。</span>
+                </div>
+            </li>
+        </ul>
+    </div>
+
+</body>
+</html>
