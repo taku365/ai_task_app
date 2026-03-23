@@ -1500,6 +1500,11 @@ body {
     gap: 20px;
 }
 
+.account-form {
+    gap: 0;
+}
+
+
 /* フィールド */
 .auth-field {
     display: flex;
@@ -1514,6 +1519,10 @@ body {
     font-size: 14px;
     font-weight: 600;
     color: #2c3e50;
+}
+
+.account-form .auth-label {
+    margin-top: 20px;
 }
 
 .auth-label i {
@@ -1773,8 +1782,6 @@ body {
 /* アカウント設定セクション */
 .account-section {
     margin-bottom: 32px;
-    padding-bottom: 32px;
-    border-bottom: 1px solid #e0e0e0;
 }
 
 .account-section:last-of-type {
@@ -1786,13 +1793,11 @@ body {
     font-size: 16px;
     font-weight: 600;
     color: #2c3e50;
-    margin-bottom: 8px;
 }
 
 .account-section-description {
     font-size: 13px;
     color: #7f8c8d;
-    margin-bottom: 20px;
     line-height: 1.5;
 }
 

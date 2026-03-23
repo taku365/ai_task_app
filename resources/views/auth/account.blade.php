@@ -15,7 +15,7 @@
             </div>
 
             <!-- フォーム -->
-            <form method="POST" action="#" class="auth-form">
+            <form method="POST" action="#" class="auth-form account-form">
                 @csrf
 
                 <!-- 成功メッセージ -->
@@ -48,8 +48,8 @@
                             <i class="fas fa-user"></i>
                             <span>ユーザー名</span>
                         </label>
-                        <input type="text" id="name" name="name" value="{{ old('name', Auth::user()->name) }}" 
-                               class="auth-input" placeholder="山田太郎" required maxlength="50">
+                        <input type="text" id="name" name="name" value="{{ old('name', Auth::user()->name) }}"
+                            class="auth-input" placeholder="山田太郎" required maxlength="50">
                     </div>
 
                     <!-- メールアドレス -->
@@ -58,8 +58,8 @@
                             <i class="fas fa-envelope"></i>
                             <span>メールアドレス</span>
                         </label>
-                        <input type="email" id="email" name="email" value="{{ old('email', Auth::user()->email) }}" 
-                               class="auth-input" placeholder="example@example.com" required>
+                        <input type="email" id="email" name="email" value="{{ old('email', Auth::user()->email) }}"
+                            class="auth-input" placeholder="example@example.com" required>
                     </div>
                 </div>
 
@@ -75,8 +75,8 @@
                             <span>現在のパスワード</span>
                         </label>
                         <div class="auth-input-wrapper">
-                            <input type="password" id="current_password" name="current_password"
-                                   class="auth-input" placeholder="現在のパスワード">
+                            <input type="password" id="current_password" name="current_password" class="auth-input"
+                                placeholder="現在のパスワード">
                             <button type="button" class="password-toggle-btn" onclick="togglePassword('current_password')">
                                 <i id="current_password-toggle-icon" class="fas fa-eye"></i>
                             </button>
@@ -90,13 +90,12 @@
                             <span>新しいパスワード</span>
                         </label>
                         <div class="auth-input-wrapper">
-                            <input type="password" id="password" name="password"
-                                   class="auth-input" placeholder="8文字以上" minlength="8">
+                            <input type="password" id="password" name="password" class="auth-input" placeholder="8文字以上"
+                                minlength="8">
                             <button type="button" class="password-toggle-btn" onclick="togglePassword('password')">
                                 <i id="password-toggle-icon" class="fas fa-eye"></i>
                             </button>
                         </div>
-                        <p class="auth-field-hint">8文字以上で入力してください</p>
                     </div>
 
                     <!-- 新しいパスワード（確認） -->
@@ -107,8 +106,9 @@
                         </label>
                         <div class="auth-input-wrapper">
                             <input type="password" id="password_confirmation" name="password_confirmation"
-                                   class="auth-input" placeholder="もう一度入力してください" minlength="8">
-                            <button type="button" class="password-toggle-btn" onclick="togglePassword('password_confirmation')">
+                                class="auth-input" placeholder="もう一度入力してください" minlength="8">
+                            <button type="button" class="password-toggle-btn"
+                                onclick="togglePassword('password_confirmation')">
                                 <i id="password_confirmation-toggle-icon" class="fas fa-eye"></i>
                             </button>
                         </div>
