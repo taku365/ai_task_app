@@ -121,10 +121,15 @@
             @endif
         </div>
 
-        <!-- 新規タスク追加ボタン -->
-        <button class="floating-add-btn" id="voiceInputBtn">
-            <i class="fas fa-plus"></i>
-        </button>
+        <!-- フローティングボタン -->
+        <div class="floating-btns">
+            <button class="floating-voice-btn" id="floatingVoiceBtn">
+                <i class="fas fa-microphone"></i>
+            </button>
+            <button class="floating-add-btn" id="voiceInputBtn">
+                <i class="fas fa-plus"></i>
+            </button>
+        </div>
 
         <!-- 録音中バー -->
         <div class="recording-bar" id="recordingBar">
@@ -184,12 +189,7 @@
                         <i class="fas fa-clipboard"></i>
                         <span>タスク</span>
                     </div>
-                    <div class="text-input-wrapper">
-                        <input type="text" id="textInputField" class="detail-field-input" value="" placeholder="タスクを入力してください" />
-                        <button type="button" id="taskVoiceInputBtn" class="modal-voice-btn" title="音声入力">
-                            <i class="fas fa-microphone"></i>
-                        </button>
-                    </div>
+                    <input type="text" id="textInputField" class="detail-field-input" value="" placeholder="タスクを入力してください" />
                 </div>
 
                 <div class="detail-field" id="dateField">
