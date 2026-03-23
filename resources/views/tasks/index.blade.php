@@ -126,6 +126,18 @@
             <i class="fas fa-plus"></i>
         </button>
 
+        <!-- 録音中バー -->
+        <div class="recording-bar" id="recordingBar">
+            <i class="fas fa-microphone recording-bar-icon" id="recordingBarIcon"></i>
+            <div class="recording-bar-waves" id="recordingBarWaves">
+                <span></span><span></span><span></span><span></span><span></span>
+            </div>
+            <span class="recording-bar-label" id="recordingBarLabel"></span>
+            <button class="recording-bar-stop" id="recordingBarStopBtn">
+                <i class="fas fa-stop"></i>
+            </button>
+        </div>
+
         <!-- ボトムナビ -->
         <div class="bottom-nav">
             <a href="{{ route('tasks.index') }}" class="nav-item active" id="taskNavBtn">
