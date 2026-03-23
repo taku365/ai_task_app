@@ -173,11 +173,15 @@ class TaskController extends Controller
         // 入力テキストを取得
         $textInput = $request->input('text_input');
 
-        // 今日の日付情報を取得
+        // 日付の変数を準備
         $today = now();
         $weekdays = ['日曜日', '月曜日', '火曜日', '水曜日', '木曜日', '金曜日', '土曜日'];
         $weekday = $weekdays[$today->dayOfWeek];
-        $todayString = $today->format('Y年n月j日') . "（{$weekday}）";
+        $todayString    = $today->format('Y年n月j日') . "（{$weekday}）";
+        $todayDate      = $today->format('Y年n月j日');
+        $tomorrowDate   = $today->copy()->addDay()->format('Y年n月j日');
+        $thisWeekEnd    = $today->copy()->endOfWeek(\Carbon\Carbon::FRIDAY)->format('Y年n月j日');
+        $nextWeekEnd    = $today->copy()->addWeek()->endOfWeek(\Carbon\Carbon::FRIDAY)->format('Y年n月j日');
 
         // ★★★ログインユーザーを取得
         $currentUser = Auth::user();
@@ -210,12 +214,12 @@ class TaskController extends Controller
             (A) 明示日付:
             - 「2026年3月10日」「3/10」「2026-03-10」などがあればそれを採用し、yyyy年m月d日に統一
             (B) 相対表現（入力にあれば変換）:
-            - 今日 = 今日
-            - 明日 = 今日+1日
-            - 今週中 / 今週末 = 今週の金曜日
-            - 来週中 = 来週の金曜日
+            - 今日 = {$todayDate}
+            - 明日 = {$tomorrowDate}
+            - 今週中 / 今週末 = {$thisWeekEnd}
+            - 来週中 = {$nextWeekEnd}
             (C) 緊急語:
-            - 「至急」「急ぎ」「なるはや」などがあり、日付が明示されていない場合は date="今日"
+            - 「至急」「急ぎ」「なるはや」などがあり、日付が明示されていない場合は date="{$todayDate}"
             - 該当なしは "指定なし"
 
             3) assignee
