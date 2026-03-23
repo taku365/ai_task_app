@@ -123,10 +123,10 @@
 
         <!-- フローティングボタン -->
         <div class="floating-btns">
-            <button class="floating-voice-btn" id="floatingVoiceBtn">
+            <button class="voice-input-btn" id="voiceInputBtn">
                 <i class="fas fa-microphone"></i>
             </button>
-            <button class="floating-add-btn" id="voiceInputBtn">
+            <button class="text-input-btn" id="textInputBtn">
                 <i class="fas fa-plus"></i>
             </button>
         </div>
@@ -189,7 +189,8 @@
                         <i class="fas fa-clipboard"></i>
                         <span>タスク</span>
                     </div>
-                    <input type="text" id="textInputField" class="detail-field-input" value="" placeholder="タスクを入力してください" />
+                    <input type="text" id="textInputField" class="detail-field-input" value=""
+                        placeholder="タスクを入力してください" />
                 </div>
 
                 <div class="detail-field" id="dateField">
