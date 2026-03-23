@@ -307,7 +307,7 @@ body {
     z-index: 100;
 }
 
-.floating-add-btn {
+.text-input-btn {
     width: 64px;
     height: 64px;
     border-radius: 50%;
@@ -323,12 +323,12 @@ body {
     transition: all 0.3s;
 }
 
-.floating-add-btn:hover {
+.text-input-btn:hover {
     transform: scale(1.1);
     box-shadow: 0 6px 16px rgba(231, 76, 60, 0.5);
 }
 
-.floating-voice-btn {
+.voice-input-btn {
     width: 48px;
     height: 48px;
     border-radius: 50%;
@@ -344,7 +344,7 @@ body {
     transition: all 0.3s;
 }
 
-.floating-voice-btn:hover {
+.voice-input-btn:hover {
     transform: scale(1.1);
     box-shadow: 0 6px 16px rgba(231, 76, 60, 0.3);
 }
