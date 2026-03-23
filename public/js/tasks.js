@@ -2468,9 +2468,10 @@ function updateSearchFilterBtnState() {
 // ----------------------------------------------------------------
 (function initVoiceInput() {
     const btn = document.getElementById("taskVoiceInputBtn");
+    const floatingVoiceBtn = document.getElementById("floatingVoiceBtn");
     const recordingBar = document.getElementById("recordingBar");
     const stopBtn = document.getElementById("recordingBarStopBtn");
-    if (!btn || !recordingBar || !stopBtn) return;
+    if (!recordingBar || !stopBtn) return;
 
     // Web Speech API 非対応ブラウザはボタンを非表示にする
     const SpeechRecognition =
@@ -2487,10 +2488,12 @@ function updateSearchFilterBtnState() {
 
     let transcript = "";
 
-    // マイクボタン：録音開始
-    btn.addEventListener("click", () => {
-        transcript = "";
-        recognition.start();
+    // モーダル内マイクボタン・フローティング音声ボタン：録音開始
+    [btn, floatingVoiceBtn].filter(Boolean).forEach((el) => {
+        el.addEventListener("click", () => {
+            transcript = "";
+            recognition.start();
+        });
     });
 
     // 停止ボタン：録音停止
