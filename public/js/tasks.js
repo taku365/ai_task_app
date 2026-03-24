@@ -914,11 +914,12 @@ function isOtherMemberTask(task) {
  * 初期値として現在のユーザーを担当者に設定
  */
 function openNewTaskModal() {
+    const today = new Date();
     // 空のオブジェクトでcurrentTaskを初期化 (idなし)
     currentTask = {
         textInput: "",
         aiTask: "",
-        date: "指定なし",
+        date: formatDate(today.toISOString()),
         assignee: CURRENT_USER,
         priority: "指定なし",
         createdBy: CURRENT_USER,
@@ -931,8 +932,8 @@ function openNewTaskModal() {
     // 画面表示（初期）
     document.getElementById("textInputField").value = "";
     const detailDate = document.getElementById("detailDate");
-    document.getElementById("detailDate").textContent = "指定なし";
-    detailDate.dataset.date = "";
+    document.getElementById("detailDate").textContent = currentTask.date;
+    detailDate.dataset.date = `${today.getFullYear()}年${today.getMonth() + 1}月${today.getDate()}日`;
     detailDate.dataset.time = "";
     document.getElementById("detailAssignee").textContent = CURRENT_USER;
     document.querySelectorAll(".priority-btn").forEach((btn) => {
