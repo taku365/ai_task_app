@@ -123,7 +123,10 @@
 
         <!-- フローティングボタン -->
         <div class="floating-btns">
-            <button class="voice-input-btn" id="voiceInputBtn">
+            <button class="voice-input-btn whisper-input-btn" id="whisperInputBtn" title="Whisper音声入力">
+                <i class="fas fa-microphone-alt"></i>
+            </button>
+            <button class="voice-input-btn" id="voiceInputBtn" title="Web Speech API音声入力">
                 <i class="fas fa-microphone"></i>
             </button>
             <button class="text-input-btn" id="textInputBtn">

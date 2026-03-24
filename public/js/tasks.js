@@ -1204,15 +1204,17 @@ async function textCreateTask() {
 /**
  * 新規タスクを作成（音声入力）
  */
-async function voiceCreateTask(transcript) {
+async function voiceCreateTask(transcript, skipUiSetup = false) {
     const recordingBar = document.getElementById("recordingBar");
     const recordingBarLabel = document.getElementById("recordingBarLabel");
     const analyzingOverlay = document.getElementById("analyzingOverlay");
 
-    // 解析中UIに切り替え
-    recordingBar.classList.add("active", "analyzing");
-    recordingBarLabel.textContent = "解析中...";
-    if (analyzingOverlay) analyzingOverlay.classList.add("active");
+    // 解析中UIに切り替え（Whisper経由の場合はUI設定済みのためスキップ）
+    if (!skipUiSetup) {
+        recordingBar.classList.add("active", "analyzing");
+        recordingBarLabel.textContent = "解析中...";
+        if (analyzingOverlay) analyzingOverlay.classList.add("active");
+    }
 
     try {
         // AI解析APIにリクエストを送信
@@ -1272,12 +1274,14 @@ async function voiceCreateTask(transcript) {
     } catch (error) {
         alert("エラー: " + error.message);
     } finally {
-        // UIを元に戻す
-        recordingBar.classList.remove("active", "analyzing");
-        recordingBarLabel.textContent = "";
-        if (analyzingOverlay) analyzingOverlay.classList.remove("active");
-        const voiceBtn = document.getElementById("voiceInputBtn");
-        if (voiceBtn) voiceBtn.disabled = false;
+        // UIを元に戻す（Whisper経由の場合はWhisper側のfinallyで処理するためスキップ）
+        if (!skipUiSetup) {
+            recordingBar.classList.remove("active", "analyzing");
+            recordingBarLabel.textContent = "";
+            if (analyzingOverlay) analyzingOverlay.classList.remove("active");
+            const voiceBtn = document.getElementById("voiceInputBtn");
+            if (voiceBtn) voiceBtn.disabled = false;
+        }
     }
 }
 
@@ -2525,6 +2529,7 @@ function updateSearchFilterBtnState() {
     recognition.onend = () => {
         recordingBar.classList.remove("active");
         if (transcript) {
+            console.log("[Web Speech API] 文字起こし結果:", transcript);
             voiceCreateTask(transcript);
         } else {
             // 何も喋らなかった場合はここでボタンを戻す
@@ -2541,4 +2546,114 @@ function updateSearchFilterBtnState() {
             );
         }
     };
+})();
+
+// ----------------------------------------------------------------
+// Whisper音声入力（OpenAI Whisper API）
+// ----------------------------------------------------------------
+(function initWhisperInput() {
+    const whisperBtn = document.getElementById("whisperInputBtn");
+    const recordingBar = document.getElementById("recordingBar");
+    const recordingBarLabel = document.getElementById("recordingBarLabel");
+    const stopBtn = document.getElementById("recordingBarStopBtn");
+    if (!whisperBtn || !recordingBar || !stopBtn) return;
+
+    // MediaRecorder非対応ブラウザは非表示
+    if (!navigator.mediaDevices || !window.MediaRecorder) {
+        whisperBtn.style.display = "none";
+        return;
+    }
+
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let isRecording = false;
+
+    whisperBtn.addEventListener("click", async () => {
+        if (isRecording) return;
+
+        try {
+            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+            const mimeType = MediaRecorder.isTypeSupported("audio/webm")
+                ? "audio/webm"
+                : "audio/mp4";
+
+            audioChunks = [];
+            mediaRecorder = new MediaRecorder(stream, { mimeType });
+
+            mediaRecorder.ondataavailable = (e) => {
+                if (e.data.size > 0) audioChunks.push(e.data);
+            };
+
+            mediaRecorder.onstop = async () => {
+                // マイクを解放
+                stream.getTracks().forEach((t) => t.stop());
+                isRecording = false;
+
+                if (audioChunks.length === 0) {
+                    whisperBtn.disabled = false;
+                    recordingBar.classList.remove("active");
+                    return;
+                }
+
+                const ext = mimeType.includes("webm") ? "webm" : "mp4";
+                const audioBlob = new Blob(audioChunks, { type: mimeType });
+                const formData = new FormData();
+                formData.append("audio", audioBlob, `audio.${ext}`);
+                formData.append("_token", csrfToken);
+
+                // 解析中UIに切り替え
+                recordingBar.classList.add("active", "analyzing");
+                recordingBarLabel.textContent = "Whisper解析中...";
+                const analyzingOverlay = document.getElementById("analyzingOverlay");
+                if (analyzingOverlay) analyzingOverlay.classList.add("active");
+
+                try {
+                    const res = await fetch("/api/tasks/transcribe", {
+                        method: "POST",
+                        headers: { "X-CSRF-TOKEN": csrfToken },
+                        body: formData,
+                    });
+                    const result = await res.json();
+
+                    if (!result.success) {
+                        alert("文字起こしに失敗しました: " + (result.message || ""));
+                        return;
+                    }
+
+                    if (!result.transcript || result.transcript.trim() === "") {
+                        alert("音声が認識できませんでした。もう一度お試しください。");
+                        return;
+                    }
+
+                    console.log("[Whisper API] 文字起こし結果:", result.transcript);
+                    // 文字起こし結果を既存のAI解析フローに流す（UI設定済みのためスキップ）
+                    await voiceCreateTask(result.transcript, true);
+                } catch (err) {
+                    alert("エラー: " + err.message);
+                } finally {
+                    recordingBar.classList.remove("active", "analyzing");
+                    recordingBarLabel.textContent = "";
+                    if (analyzingOverlay) analyzingOverlay.classList.remove("active");
+                    whisperBtn.disabled = false;
+                }
+            };
+
+            mediaRecorder.start();
+            isRecording = true;
+            whisperBtn.disabled = true;
+            recordingBar.classList.add("active");
+            recordingBar.classList.remove("analyzing");
+            recordingBarLabel.textContent = "録音中（Whisper）...";
+        } catch (err) {
+            alert("マイクの使用が許可されていません。ブラウザの設定を確認してください。");
+        }
+    });
+
+    // 停止ボタン共用
+    stopBtn.addEventListener("click", () => {
+        if (mediaRecorder && isRecording) {
+            mediaRecorder.stop();
+            recordingBar.classList.remove("active");
+        }
+    });
 })();
