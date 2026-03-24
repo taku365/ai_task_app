@@ -387,5 +387,6 @@
             window.MEMBERS = @json($users->map(fn($u) => ['id' => $u->id, 'name' => $u->name]));
         </script>
         <script src="{{ asset('js/tasks.js') }}"></script>
+        <script src="{{ asset('js/voice-input.js') }}"></script>
     @endpush
 @endsection
