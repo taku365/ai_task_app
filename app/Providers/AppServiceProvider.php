@@ -23,5 +23,9 @@ class AppServiceProvider extends ServiceProvider
         if (request()->header('X-Forwarded-Proto') == 'https') {
             URL::forceScheme('https');
         }
+
+        if (!defined('CURL_SSLVERSION_TLSv1_2')) {
+            define('CURL_SSLVERSION_TLSv1_2', 6);
+        }
     }
 }
