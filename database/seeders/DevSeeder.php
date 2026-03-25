@@ -12,24 +12,44 @@ class DevSeeder extends Seeder
 {
     public function run(): void
     {
-        // 固定ユーザー3人
+        // 固定ユーザー7人（UI検証用：フルネーム4人・苗字のみ3人）
         $user1 = User::factory()->create([
-            'name'     => 'テスト1',
+            'name'     => '山田太郎',      // 4文字
             'email'    => 'test1@test.com',
             'password' => Hash::make('password'),
         ]);
         $user2 = User::factory()->create([
-            'name'     => 'テスト2',
+            'name'     => '鈴木花子',      // 4文字
             'email'    => 'test2@test.com',
             'password' => Hash::make('password'),
         ]);
         $user3 = User::factory()->create([
-            'name'     => 'テスト3',
+            'name'     => '中村健太郎',    // 5文字
             'email'    => 'test3@test.com',
             'password' => Hash::make('password'),
         ]);
+        $user4 = User::factory()->create([
+            'name'     => '佐々木美由紀',  // 6文字
+            'email'    => 'test4@test.com',
+            'password' => Hash::make('password'),
+        ]);
+        $user5 = User::factory()->create([
+            'name'     => '小林',
+            'email'    => 'test5@test.com',
+            'password' => Hash::make('password'),
+        ]);
+        $user6 = User::factory()->create([
+            'name'     => '加藤',
+            'email'    => 'test6@test.com',
+            'password' => Hash::make('password'),
+        ]);
+        $user7 = User::factory()->create([
+            'name'     => '吉田',
+            'email'    => 'test7@test.com',
+            'password' => Hash::make('password'),
+        ]);
 
-        $users = collect([$user1, $user2, $user3]);
+        $users = collect([$user1, $user2, $user3, $user4, $user5, $user6, $user7]);
 
         $highPriority   = Priority::where('code', 'high')->first()?->id;
         $mediumPriority = Priority::where('code', 'medium')->first()?->id;
