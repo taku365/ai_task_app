@@ -10,10 +10,6 @@ use App\Models\Task;
 use App\Models\User;
 use App\Models\Priority;
 
-use GuzzleHttp\Client;
-use GuzzleHttp\HandlerStack;
-use GuzzleHttp\Handler\StreamHandler;
-
 
 class TaskController extends Controller
 {
@@ -175,11 +171,7 @@ class TaskController extends Controller
         $file = $request->file('audio');
 
         try {
-            $stack = HandlerStack::create(new StreamHandler());
-            $client = new Client(['handler' => $stack]);
-
-            $response = Http::setClient($client)
-                ->withHeaders([
+            $response = Http::withHeaders([
                     'Authorization' => 'Bearer ' . env('OPENAI_API_KEY'),
                 ])->timeout(30)->attach(
                     'file',
@@ -290,15 +282,11 @@ class TaskController extends Controller
 
         // 処理
         try {
-            $stack = HandlerStack::create(new StreamHandler());
-            $client = new Client(['handler' => $stack]);
-
             // OpenAI APIを呼び出し
-            $response = Http::setClient($client)
-                ->withHeaders([
-                    'Authorization' => 'Bearer ' . env('OPENAI_API_KEY'),
-                    'Content-Type' => 'application/json',
-                ])->timeout(30)->post('https://api.openai.com/v1/chat/completions', [
+            $response = Http::withHeaders([
+                'Authorization' => 'Bearer ' . env('OPENAI_API_KEY'),
+                'Content-Type' => 'application/json',
+            ])->timeout(30)->post('https://api.openai.com/v1/chat/completions', [
                     'model' => 'gpt-5',
                     'messages' => [
                         [
