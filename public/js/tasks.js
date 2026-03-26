@@ -1417,7 +1417,7 @@ function confirmDeleteTask() {
         const assigneeName = currentTask.assignee;
         showAlert(
             "他メンバーのタスクです",
-            `このタスクは<strong>${assigneeName}</strong>さんに割り当てられています。削除してもよろしいですか?`,
+            `<strong>${assigneeName}</strong>さんに割り当てられています<br>削除してもよろしいですか?`,
             "削除する",
             () => executeDeleteTask(),
             "fas fa-trash",
@@ -1429,7 +1429,7 @@ function confirmDeleteTask() {
     if (currentTask.assignee === "指定なし") {
         showAlert(
             "担当者なしのタスクです",
-            "このタスクは担当者が指定されていません。削除してもよろしいですか?",
+            "担当者が指定されていません<br>削除してもよろしいですか?",
             "削除する",
             () => executeDeleteTask(),
             "fas fa-trash",
@@ -1505,7 +1505,7 @@ function handleCheckboxClick(event, taskId) {
         const assigneeName = task.assignee;
         showAlert(
             "他メンバーのタスクです",
-            `このタスクは<strong>${assigneeName}</strong>さんに割り当てられています。完了にしてもよろしいですか?`,
+            `<strong>${assigneeName}</strong>さんに割り当てられています<br>完了にしてもよろしいですか?`,
             "完了にする",
             () =>
                 executeCompleteTaskWithAnimation(
@@ -1592,7 +1592,7 @@ async function completeTask() {
             const assigneeName = currentTask.assignee;
             showAlert(
                 "他メンバーのタスクです",
-                `このタスクは<strong>${assigneeName}</strong>さんに割り当てられています。完了にしてもよろしいですか?`,
+                `<strong>${assigneeName}</strong>さんに割り当てられています<br>完了にしてもよろしいですか?`,
                 "完了にする",
                 () => executeCompleteTask(),
                 "fas fa-user",
@@ -1735,7 +1735,7 @@ function uncompleteTask() {
         const assigneeName = currentTask.assignee;
         showAlert(
             "他メンバーのタスクです",
-            `このタスクは<strong>${assigneeName}</strong>さんに割り当てられています。未完了に戻してもよろしいですか?`,
+            `<strong>${assigneeName}</strong>さんに割り当てられています<br>未完了に戻してもよろしいですか?`,
             "未完了に戻す",
             () => executeUncompleteTask(),
             "fas fa-user",
@@ -1956,7 +1956,7 @@ function renderCompletedInfo(task, checkboxContent, priorityClass) {
         <div class="completed-info">
             <div class="task-checkbox ${priorityClass}">${checkboxContent}</div>
             <span class="completed-time">${timeString}</span>
-            <span class="completed-by"><strong class="completed-by-name">${completedByName}</strong>がタスクを完了しました</span>
+            <span class="completed-by"><strong class="completed-by-name">${completedByName}</strong> がタスクを完了しました</span>
         </div>
     `;
 }
@@ -2469,4 +2469,3 @@ function updateSearchFilterBtnState() {
         .getElementById("searchFilterToggleBtn")
         .classList.toggle("has-filter", hasFilter);
 }
-
