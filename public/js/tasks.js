@@ -499,24 +499,9 @@ function renderTaskList(tasks, filter) {
 
     const isCompleted = filter === "completed";
 
-    // self と member フィルタの場合は日付でグループ化
-    if (filter === "self" || filter === "member") {
+    // self, member, unassigned フィルタの場合は日付でグループ化
+    if (filter === "self" || filter === "member" || filter === "unassigned") {
         const groupedTasks = groupTasksByDate(tasks);
-
-        container.innerHTML = groupedTasks
-            .map((group) => {
-                const header = `<div class="date-group-header">${group.headerText}</div>`;
-                const taskItems = group.tasks
-                    .map((task) =>
-                        renderTaskItem(task, isCompleted, group.type),
-                    )
-                    .join("");
-                return header + taskItems;
-            })
-            .join("");
-    } else if (filter === "unassigned") {
-        // unassigned フィルタは優先順位でグループ化
-        const groupedTasks = groupUnassignedTasks(tasks);
 
         container.innerHTML = groupedTasks
             .map((group) => {
@@ -1929,12 +1914,12 @@ function renderTaskItem(task, isCompleted = false, groupType = null) {
     const completedClass = isCompleted ? "completed-task" : "";
     const checkboxContent = isCompleted ? '<i class="fas fa-check"></i>' : "";
 
-    // グループタイプがある場合はグループ用の日付表示
+    // groupTypeあり (self / member / unassigned)
     let dateTimeDisplay;
     if (groupType) {
         dateTimeDisplay = formatTaskDateInGroup(task, groupType);
     } else {
-        // 従来通りの表示（unassigned, completed用）
+        // groupTypeなし (completed)
         const dateLabel = task.date === "指定なし" ? "期限なし" : task.date;
         dateTimeDisplay = task.time ? `${dateLabel} ${task.time}` : dateLabel;
     }
