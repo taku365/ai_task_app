@@ -1148,6 +1148,11 @@ body {
     color: #e74c3c;
 }
 
+.calendar-day.selected.sunday,
+.calendar-day.selected.saturday {
+    color: #fff;
+}
+
 .calendar-day.saturday {
     color: #3498db;
 }
