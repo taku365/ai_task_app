@@ -172,15 +172,15 @@ class TaskController extends Controller
 
         try {
             $response = Http::withHeaders([
-                    'Authorization' => 'Bearer ' . env('OPENAI_API_KEY'),
-                ])->timeout(30)->attach(
-                    'file',
-                    file_get_contents($file->getRealPath()),
-                    'audio.' . $file->getClientOriginalExtension()
-                )->post('https://api.openai.com/v1/audio/transcriptions', [
-                    'model' => 'whisper-1',
-                    'language' => 'ja',
-                ]);
+                'Authorization' => 'Bearer ' . env('OPENAI_API_KEY'),
+            ])->timeout(30)->attach(
+                'file',
+                file_get_contents($file->getRealPath()),
+                'audio.' . $file->getClientOriginalExtension()
+            )->post('https://api.openai.com/v1/audio/transcriptions', [
+                'model' => 'whisper-1',
+                'language' => 'ja',
+            ]);
 
             if ($response->failed()) {
                 return response()->json([
@@ -287,21 +287,21 @@ class TaskController extends Controller
                 'Authorization' => 'Bearer ' . env('OPENAI_API_KEY'),
                 'Content-Type' => 'application/json',
             ])->timeout(30)->post('https://api.openai.com/v1/chat/completions', [
-                    'model' => 'gpt-5',
-                    'messages' => [
-                        [
-                            'role' => 'system',
-                            'content' => $systemPrompt,
-                        ],
-                        [
-                            'role' => 'user',
-                            'content' => $textInput,
-                        ],
+                'model' => 'gpt-5',
+                'messages' => [
+                    [
+                        'role' => 'system',
+                        'content' => $systemPrompt,
                     ],
-                    'response_format' => [
-                        'type' => 'json_object',
+                    [
+                        'role' => 'user',
+                        'content' => $textInput,
                     ],
-                ]);
+                ],
+                'response_format' => [
+                    'type' => 'json_object',
+                ],
+            ]);
 
             // HTTPステータスが4xx / 5xx の場合はエラーを返す
             if ($response->failed()) {

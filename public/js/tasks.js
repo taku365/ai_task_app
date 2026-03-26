@@ -910,6 +910,26 @@ function isOtherMemberTask(task) {
 }
 
 /**
+ * タスクの内容が変更されたかどうかを判定
+ * @returns {boolean} 変更がある場合true
+ */
+function hasTaskChanged() {
+    const textInput = document.getElementById("textInputField").value.trim();
+    const assignee = document.getElementById("detailAssignee").textContent;
+    const date = document.getElementById("detailDate").textContent;
+    const priority =
+        document.querySelector(".priority-btn.active")?.dataset.priority ||
+        "指定なし";
+
+    return (
+        textInput !== currentTask.textInput ||
+        assignee !== currentTask.assignee ||
+        date !== currentTask.date ||
+        priority !== currentTask.priority
+    );
+}
+
+/**
  * 新規タスク作成モーダルを開く
  * 初期値として現在のユーザーを担当者に設定
  */
@@ -1283,6 +1303,48 @@ async function voiceCreateTask(transcript, skipUiSetup = false) {
             if (voiceBtn) voiceBtn.disabled = false;
         }
     }
+}
+
+/**
+ * タスク編集の確認ダイアログを表示
+ * 他メンバーのタスクまたは担当者なしの場合はアラートを表示
+ */
+function confirmEditTask() {
+    // currentTask.id の存在チェックは handleSaveTask() で済んでいる
+
+    // 変更がない場合
+    if (!hasTaskChanged()) {
+        closeModal("taskDetailModal");
+        return;
+    }
+
+    // 他メンバーのタスク
+    if (isOtherMemberTask(currentTask)) {
+        const assigneeName = currentTask.assignee;
+        showAlert(
+            "他メンバーのタスクです",
+            `<strong>${assigneeName}</strong>さんに割り当てられています<br>編集してもよろしいですか?`,
+            "編集する",
+            () => executeEditTask(),
+            "fas fa-edit",
+        );
+        return;
+    }
+
+    // 担当者なしのタスク
+    if (currentTask.assignee === "指定なし") {
+        showAlert(
+            "担当者なしのタスクです",
+            "担当者が指定されていません<br>編集してもよろしいですか?",
+            "編集する",
+            () => executeEditTask(),
+            "fas fa-edit",
+        );
+        return;
+    }
+
+    // 自分のタスク
+    executeEditTask();
 }
 
 /**
