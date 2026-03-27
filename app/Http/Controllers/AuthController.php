@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Storage;
 
 class AuthController extends Controller
 {
@@ -177,6 +178,7 @@ class AuthController extends Controller
         $rules = [
             'name' => ['required', 'string', 'max:50'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:ai_tasks_M_users,email,' . $user->id],
+            'avatar' => ['nullable', 'image', 'mimes:jpeg,png,gif', 'max:2048'],
         ];
 
         // パスワード変更がある場合のバリデーション
@@ -198,6 +200,9 @@ class AuthController extends Controller
             'email.required' => 'メールアドレスを入力してください。',
             'email.email' => '有効なメールアドレスを入力してください。',
             'email.unique' => 'このメールアドレスは既に使用されています。',
+            'avatar.image' => 'プロフィール画像は画像ファイルを選択してください。',
+            'avatar.mimes' => 'プロフィール画像はjpeg、png、gif形式のみ使用できます。',
+            'avatar.max'   => 'プロフィール画像は2MB以下にしてください。',
         ];
 
         // validate([ フィールド名 => バリデーションルール ]) : フォームの入力がルールを満たすか検証する
@@ -210,6 +215,14 @@ class AuthController extends Controller
         // バスワード変更がある場合は更新
         if ($request->filled('password')) {
             $user->password = $validated['password'];
+        }
+
+        // プロフィール画像の保存処理
+        if ($request->hasFile('avatar')) {
+            if ($user->avatar) {
+                Storage::disk('public')->delete($user->avatar);
+            }
+            $user->avatar = $request->file('avatar')->store('avatars', 'public');
         }
 
         /** @var \App\Models\User $user */
