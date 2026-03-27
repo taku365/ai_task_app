@@ -47,4 +47,7 @@ Route::middleware(['auth', 'no-cache'])->group(function () {
 
     // アカウント情報更新
     Route::post('/account', [AuthController::class, 'updateAccount'])->name('account.update');
+
+    // プロフィール画像削除
+    Route::delete('/account/avatar', [AuthController::class, 'deleteAvatar'])->name('account.avatar.delete');
 });
