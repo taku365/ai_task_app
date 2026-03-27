@@ -1887,11 +1887,18 @@ function openMemberSelect() {
 function renderMemberList() {
     const memberList = document.getElementById("memberList");
     if (!memberList) return;
+    console.log(MEMBERS);
 
     memberList.innerHTML = MEMBERS.map(
         (member) => `
             <div class="member-item" onclick="selectMemberInMemberSelectModal(${member.id})">
-                <div class="member-avatar">${member.name.charAt(0)}</div>
+                <div class="member-avatar">
+                    ${
+                        member.avatar
+                            ? `<img src="${member.avatar}" class="member-avatar-img" alt="${member.name}">`
+                            : member.name.charAt(0)
+                    }
+                </div>
                 <div class="member-name">${member.name}</div>
                 <div class="member-check ${selectedMember === member.id ? "selected" : ""}">
                     ${selectedMember === member.id ? '<i class="fas fa-check"></i>' : ""}

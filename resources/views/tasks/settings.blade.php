@@ -13,7 +13,11 @@
             <div class="settings-section">
                 <a href="{{ route('account.edit') }}" class="settings-item">
                     <div class="settings-item-icon account">
-                        <i class="fas fa-user"></i>
+                        @if (Auth::user()->avatar)
+                            <img src="{{ Storage::url(Auth::user()->avatar) }}" class="settings-avatar" alt="プロフィール画像">
+                        @else
+                            <i class="fas fa-user"></i>
+                        @endif
                     </div>
                     <div class="settings-item-content">
                         <div class="settings-item-title">アカウント</div>

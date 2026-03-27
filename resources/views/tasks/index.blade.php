@@ -1,3 +1,4 @@
+@use(Illuminate\Support\Facades\Storage)
 @extends('layouts.app')
 
 @section('title', 'タスク')
@@ -384,7 +385,7 @@
     @push('scripts')
         <script>
             window.CURRENT_USER = @json($currentUser->name);
-            window.MEMBERS = @json($users->map(fn($u) => ['id' => $u->id, 'name' => $u->name]));
+            window.MEMBERS = @json($users->map(fn($u) => ['id' => $u->id, 'name' => $u->name, 'avatar' => $u->avatar ? Storage::url($u->avatar) : null]));
         </script>
         <script src="{{ asset('js/tasks.js') }}"></script>
         <script src="{{ asset('js/voice-input.js') }}"></script>
