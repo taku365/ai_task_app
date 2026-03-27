@@ -29,6 +29,7 @@ class User extends Authenticatable
         'email',
         'password',
         'active_flg',
+        'avatar',
     ];
 
     // モデルを配列やJSONに変換する際（APIレスポンスなど）、非表示にするカラムを指定
