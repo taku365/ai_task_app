@@ -2049,6 +2049,12 @@ body {
     cursor: pointer;
 }
 
+.cropper-view-box,
+.cropper-face {
+    border-radius: 50%;
+}
+
+
 /* エラーメッセージ（複数行対応） */
 .auth-error-content {
     display: flex;
