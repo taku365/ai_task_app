@@ -243,6 +243,39 @@ class AuthController extends Controller
     }
 
 
+    // プロフィール画像のアップロード処理
+    public function uploadAvatar(Request $request)
+    {
+        $request->validate([
+            'avatar' => ['required', 'image', 'mimes:jpeg,png,gif', 'max:2048'],
+        ]);
+
+        $user = Auth::user();
+
+        // 古い画像を削除
+        if ($user->avatar) {
+            Storage::disk('public')->delete($user->avatar);
+        }
+
+        // アップロードされたアバター画像ファイルを取得
+        $file = $request->file('avatar');
+
+        // 拡張子('jpg')を取得
+        $extension = $file->getClientOriginalExtension();
+        // storage/app/public/avatars/ に保存
+        $user->avatar = $file->storeAs(
+            'avatars',                                    // 保存フォルダ
+            $user->id . '_' . time() . '.' . $extension, // ファイル名
+            'public'                                      // ディスク
+        );
+
+        /** @var \App\Models\User $user */
+        $user->save();
+
+        return response()->json(['message' => 'アバターを更新しました。']);
+    }
+
+
     // プロフィール画像削除処理
     public function deleteAvatar()
     {
