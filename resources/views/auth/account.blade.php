@@ -159,9 +159,27 @@
     </div>
 @endsection
 
+<!-- トリミングモーダル -->
+<div id="cropModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; flex-direction:column; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:12px; padding:20px; width:90%; max-width:400px;">
+        <h3 style="margin-bottom:16px; text-align:center;">画像を調整</h3>
+        <div style="width:100%; height:300px;">
+            <img id="cropImage" style="max-width:100%;">
+        </div>
+        <div style="display:flex; gap:12px; margin-top:16px;">
+            <button type="button" onclick="closeCropModal()"
+                style="flex:1; padding:12px; border:1px solid #ccc; border-radius:8px; background:#fff; cursor:pointer;">キャンセル</button>
+            <button type="button" onclick="applyCrop()"
+                style="flex:1; padding:12px; border:none; border-radius:8px; background:#e74c3c; color:#fff; cursor:pointer;">適用</button>
+        </div>
+    </div>
+</div>
+
 @push('scripts')
     <script>
         window.AVATAR_DELETE_URL = '{{ route('account.avatar.delete') }}';
+        window.AVATAR_UPLOAD_URL = '{{ route('account.avatar.upload') }}';
     </script>
     <script src="{{ asset('js/auth.js') }}"></script>
 @endpush
