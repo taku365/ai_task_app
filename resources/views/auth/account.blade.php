@@ -52,7 +52,7 @@
                             <span>プロフィール画像</span>
                         </label>
                         <div class="avatar-preview-wrapper">
-                            <div class="avatar-upload-area" onclick="document.getElementById('avatar').click()">
+                            <div class="avatar-upload-area" onclick="openAvatarSelectModal()">
                                 @if (Auth::user()->avatar)
                                     <img src="{{ Storage::url(Auth::user()->avatar) }}" class="avatar-preview"
                                         alt="プロフィール画像">
@@ -65,12 +65,6 @@
                                     <i class="fas fa-camera"></i>
                                 </div>
                             </div>
-                            @if (Auth::user()->avatar)
-                                <button type="button" class="avatar-delete-btn" onclick="deleteAvatar()">
-                                    <i class="fas fa-trash"></i>
-                                    <span>画像を削除</span>
-                                </button>
-                            @endif
                         </div>
                         <input type="file" id="avatar" name="avatar" class="auth-input"
                             accept="image/jpeg,image/png,image/gif" style="display: none">
@@ -158,6 +152,46 @@
         </div>
     </div>
 @endsection
+
+<!-- アバター選択モーダル -->
+<div id="avatarSelectModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); z-index:9999; align-items:flex-end; justify-content:center;">
+    <div style="background:#fff; border-radius:12px 12px 0 0; padding:20px; width:100%; max-width:400px;">
+        <h3 style="margin-bottom:16px; text-align:center;">プロフィール画像を変更</h3>
+        <button type="button" onclick="openFileSelect()"
+            style="display:flex; align-items:center; gap:12px; width:100%; padding:16px; border:none; background:none; cursor:pointer; font-size:15px;">
+            <i class="fas fa-image"></i>
+            <span>デバイスからアップロード</span>
+        </button>
+        @if (Auth::user()->avatar)
+            <button type="button" onclick="	openAvatarDeleteModal()"
+                style="display:flex; align-items:center; gap:12px; width:100%; padding:16px; border:none; background:none; cursor:pointer; font-size:15px; color:#e74c3c;">
+                <i class="fas fa-trash"></i>
+                <span>画像を削除</span>
+            </button>
+        @endif
+        <button type="button" onclick="closeAvatarSelectModal()"
+            style="display:flex; align-items:center; justify-content:center; width:100%; padding:16px; border:none; background:none; cursor:pointer; font-size:15px; color:#999;">
+            <span>キャンセル</span>
+        </button>
+    </div>
+</div>
+
+<!-- 削除確認モーダル -->
+<div id="avatarDeleteModal"
+    style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:10000; align-items:center; justify-content:center;">
+    <div style="background:#fff; border-radius:16px; padding:24px; width:80%; max-width:320px;">
+        <h3 style="text-align:center; font-size:16px; margin-bottom:24px;">プロフィール画像を削除</h3>
+        <div style="display:flex; gap:12px;">
+            <button type="button" onclick="closeAvatarDeleteModal()"
+                style="flex:1; padding:12px; border:1px solid #ccc; border-radius:8px; background:#fff; cursor:pointer; font-size:14px;">キャンセル</button>
+            <button type="button" onclick="executeDeleteAvatar()"
+                style="flex:1; padding:12px; border:none; border-radius:8px; background:#e74c3c; color:#fff; cursor:pointer; font-size:14px;">削除</button>
+        </div>
+    </div>
+</div>
+
+
 
 <!-- トリミングモーダル -->
 <div id="cropModal"
