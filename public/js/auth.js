@@ -13,9 +13,17 @@ function togglePassword(inputId) {
     }
 }
 
-// プロフィール画像の削除
-function deleteAvatar() {
-    if (!confirm("プロフィール画像を削除しますか？")) return;
+function openAvatarDeleteModal() {
+    closeAvatarSelectModal();
+    document.getElementById("avatarDeleteModal").style.display = "flex";
+}
+
+function closeAvatarDeleteModal() {
+    document.getElementById("avatarDeleteModal").style.display = "none";
+}
+
+function executeDeleteAvatar() {
+    closeAvatarDeleteModal();
 
     fetch(window.AVATAR_DELETE_URL, {
         method: "DELETE",
@@ -29,6 +37,22 @@ function deleteAvatar() {
         .then(() => {
             location.reload();
         });
+}
+
+// アバター選択モーダルを開く
+function openAvatarSelectModal() {
+    document.getElementById("avatarSelectModal").style.display = "flex";
+}
+
+// アバター選択モーダルを閉じる
+function closeAvatarSelectModal() {
+    document.getElementById("avatarSelectModal").style.display = "none";
+}
+
+// ファイル選択を起動
+function openFileSelect() {
+    closeAvatarSelectModal();
+    document.getElementById("avatar").click();
 }
 
 // トリミングモーダルを開く
