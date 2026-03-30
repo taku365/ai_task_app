@@ -45,8 +45,11 @@ Route::middleware(['auth', 'no-cache'])->group(function () {
     // アカウント編集画面
     Route::get('/account', [AuthController::class, 'showAccountForm'])->name('account.edit');
 
-    // アカウント情報更新
+    // アカウント情報更新（名前・メール・パスワード用）
     Route::post('/account', [AuthController::class, 'updateAccount'])->name('account.update');
+
+    // プロフィール画像の登録（トリミング後に即送信）
+    Route::post('/account/avatar', [AuthController::class, 'uploadAvatar'])->name('account.avatar.upload');
 
     // プロフィール画像削除
     Route::delete('/account/avatar', [AuthController::class, 'deleteAvatar'])->name('account.avatar.delete');
