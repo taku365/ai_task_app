@@ -1724,9 +1724,12 @@ async function filterTasks(filter) {
         const searchAssigneeFilter = document.getElementById(
             "searchAssigneeFilter",
         );
-        const assigneeName = searchAssigneeFilter?.disabled
-            ? CURRENT_USER
-            : searchAssigneeFilter?.value || "";
+        const assigneeName =
+            searchAssigneeFilter?.disabled && filter !== "unassigned"
+                ? CURRENT_USER
+                : searchAssigneeFilter?.disabled
+                  ? ""
+                  : searchAssigneeFilter?.value || "";
         const priorityLabel =
             document.getElementById("searchPriorityFilter")?.value || "";
         const due = document.getElementById("searchDueFilter")?.value || "";
@@ -2349,6 +2352,12 @@ function updateSearchAssigneeFilter(filter) {
             opt.textContent = label;
             searchAssigneeFilter.appendChild(opt);
         });
+    } else if (filter === "unassigned") {
+        const opt = document.createElement("option");
+        opt.value = "";
+        opt.textContent = "担当者なし";
+        searchAssigneeFilter.appendChild(opt);
+        searchAssigneeFilter.disabled = true;
     } else {
         searchAssigneeFilter.disabled = false;
         [
